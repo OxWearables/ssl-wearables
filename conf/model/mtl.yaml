@@ -1,8 +1,0 @@
-learning_rate: 0.0001
-name: "mtl_time${task.time_reversal}_data${data.data_name}_lr${model.learning_rate}\
-       _resnet${model.resnet}_resnet_big${model.resnet_big}_pos${task.positive_ratio}_sample${dataloader.num_sample_per_subject}"
-mixed_precision: false
-resnet: false
-resnet_big: false
-patience: 10
-

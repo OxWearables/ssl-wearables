@@ -1,9 +1,0 @@
-feat_hand_crafted: false
-feat_random_cnn: true
-rotation_net: false
-flip_net: false
-flip_net_ft: false
-flip_net_mlp: false
-evaluation_name: feat_random_cnn
-input_size: 900
-

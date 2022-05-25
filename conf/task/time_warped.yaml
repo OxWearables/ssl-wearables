@@ -1,9 +1,0 @@
-rotation: false
-switch_axis: false
-time_reversal: false
-permutation: false
-scale: false
-time_warped: true
-positive_ratio: 0.5
-task_name: 'timeW'
-multi: false

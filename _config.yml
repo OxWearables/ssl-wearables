@@ -1,0 +1,18 @@
+# Setup
+title:        Wearables@OX project template
+tagline:      Communicate your research and beyond
+baseurl:      "/project_template_page"
+paginate:     1
+locale:       "en"
+
+# About/contact
+author:
+  name:       Wearables@OX
+  url:        https://github.com/activityMonitoring
+
+# Gems
+gems:
+  - jekyll-paginate
+
+#Others
+markdown: kramdown
