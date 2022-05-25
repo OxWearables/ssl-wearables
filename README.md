@@ -49,8 +49,7 @@ import torch
 import numpy as np
 
 repo = 'OxWearables/ssl-wearables'
-harnet10 = torch.hub.load(repo, 'harnet10', class_num=5,
-                       pretrained=True)
+harnet10 = torch.hub.load(repo, 'harnet10', class_num=5, pretrained=True)
 x = np.random.rand(1, 3, 300)
 x = torch.FloatTensor(x)
 harnet10(x)
