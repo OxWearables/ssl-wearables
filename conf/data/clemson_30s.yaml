@@ -1,0 +1,13 @@
+data_root: /data/UKBB/clemson_15hz_w30_o15
+X_path: "${data.data_root}/X.npy"
+Y_path:  "${data.data_root}/Y.npy"
+PID_path:  "${data.data_root}/pid.npy"
+sample_rate: 15
+task_type: 'regress'
+output_size: 1
+batch_size: 100
+held_one_subject_out: false
+weighted_loss_fn: false
+dataset_name: 'clemson'
+ratio2keep: 1
+

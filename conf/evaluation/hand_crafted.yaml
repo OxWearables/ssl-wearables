@@ -1,0 +1,9 @@
+feat_hand_crafted: true
+feat_random_cnn: false
+rotation_net: false
+flip_net: false
+flip_net_ft: false
+flip_net_mlp: false
+evaluation_name: hand_crafted
+epoch_idx: 0
+subR: 1

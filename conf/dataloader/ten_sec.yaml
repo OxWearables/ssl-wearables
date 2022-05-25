@@ -1,0 +1,3 @@
+num_sample_per_subject: 1500
+sample_rate: 30
+epoch_len: 10

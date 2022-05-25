@@ -1,0 +1,4 @@
+num_sample_per_subject: 500
+sample_rate: 30
+epoch_len: 30
+# default is 30 sec

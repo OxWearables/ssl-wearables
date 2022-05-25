@@ -1,0 +1,18 @@
+# 7 subjects: 3 F 4 M
+# The classes are very imbalanced
+# Preprocessing done:
+# 1. Keep subjects ['f1', 'f2', 'f3', 'm1', 'm2', 'm3', 'm4']
+# 2. Keep only ['climb_stairs','drink_glass', 'pour_water', 'walk', 'getup_bed']
+data_root: /data/UKBB/ssl_downstream/adl_30hz_clean
+X_path: "${data.data_root}/X.npy"
+Y_path:  "${data.data_root}/Y.npy"
+PID_path:  "${data.data_root}/pid.npy"
+sample_rate: 30
+task_type: 'classify'
+output_size: 5
+batch_size: 50
+held_one_subject_out: true
+weighted_loss_fn: true
+dataset_name: 'adl'
+subject_count: -1
+ratio2keep: 1

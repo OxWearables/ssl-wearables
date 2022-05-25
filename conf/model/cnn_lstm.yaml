@@ -1,0 +1,10 @@
+learning_rate: 0.0001
+isSmall: false
+graident_clip_val: 1
+name: "cnn_lstm_Aug${runtime.augment}_dropout${model.dropout_p}\
+      _biLSTM${model.bi_lstm}_lstmLayer${model.lstm_layer}\
+      _lstmNN${model.lstm_nn_size}_useGen2${data.use_gen2}"
+dropout_p: 0
+bi_lstm: false
+lstm_nn_size: 1024
+lstm_layer: 3

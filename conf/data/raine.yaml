@@ -1,0 +1,13 @@
+data_root: /data/UKBB/Raine
+X_path: "${data.data_root}/X_raw.pkl"
+y_path: "${data.data_root}/y_raw.pkl"
+X_gen2_path: "${data.data_root}/raw_x_gen2.pkl"
+y_gen2_path: "${data.data_root}/raw_y_gen2.pkl"
+use_gen2: False
+context_path: "${data.data_root}/context.pkl"
+log_path: /home/cxx579/raine/logs
+win_length: 1
+isBidirectional: False
+batch_size: 7000
+meta_data_size: 0
+ratio2keep: 1

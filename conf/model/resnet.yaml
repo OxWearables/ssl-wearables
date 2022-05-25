@@ -1,0 +1,9 @@
+learning_rate: 0.0001
+name: "mtl_time${task.time_reversal}_data${data.data_name}_lr${model.learning_rate}\
+       _resnet_v${model.resnet_version}_win_size${dataloader.epoch_len}_posR_${task.positive_ratio}_sample${dataloader.num_sample_per_subject}"
+mixed_precision: false
+resnet_version: 1
+warm_up_step: 5
+lr_scale: true
+patience: 5
+

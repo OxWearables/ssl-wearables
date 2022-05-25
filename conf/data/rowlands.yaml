@@ -1,0 +1,5 @@
+data_root: /data/UKBB/rowlands_80hz_w30_o15
+X_path: "${data.data_root}/X.npy"
+Y_path:  "${data.data_root}/Y.npy"
+PID_path:  "${data.data_root}/pid.npy"
+ratio2keep: 1

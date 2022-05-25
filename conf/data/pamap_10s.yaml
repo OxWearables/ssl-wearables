@@ -1,0 +1,18 @@
+# 9 subjects: 1 F 8 M
+# The classes are very imbalanced
+# Age: 27.22 ± 3.31
+# Preprocessing done:
+# 1. Remove activityID=0
+data_root: /data/UKBB/pamap_100hz_w10_o5
+X_path: "${data.data_root}/X.npy"
+Y_path:  "${data.data_root}/Y.npy"
+PID_path:  "${data.data_root}/pid.npy"
+sample_rate: 100
+task_type: 'classify'
+output_size: 8
+batch_size: 100
+held_one_subject_out: true
+weighted_loss_fn: false
+dataset_name: 'pamap'
+subject_count: -1
+ratio2keep: 1

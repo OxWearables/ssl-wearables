@@ -1,0 +1,27 @@
+## baselines
+## Pre-trained flip-net fine-tuned fine tune all layers
+
+feat_hand_crafted: false
+feat_random_cnn: false
+
+# trained networks
+model_path: /data/UKBB/SSL/day_sec_10k/logs/models
+flip_net: false
+flip_net_ft: true
+flip_net_random_mlp: false
+load_weights: true
+freeze_weight: false
+postR: 50
+sample_per_subject: 500
+flip_net_path: "/data/UKBB/SSL/final_models/transfer_learning/rowlands.pt"
+input_size: 300  # input size after resampling the raw data
+epoch_idx: 0
+subR: 1
+
+# hyper-parameters
+learning_rate: 0.0001
+num_workers: 6
+patience: 5
+num_epoch: 200
+
+evaluation_name: "flip_net_ft_rowlands_postR${evaluation.postR}_${evaluation.sample_per_subject}"

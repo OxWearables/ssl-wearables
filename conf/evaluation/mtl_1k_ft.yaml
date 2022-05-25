@@ -1,0 +1,29 @@
+## baselines
+## Pre-trained flip-net fine-tuned fine tune all layers
+
+feat_hand_crafted: false
+feat_random_cnn: false
+
+# trained networks
+model_path: /data/UKBB/SSL/day_sec_1k/logs/models/1k_mtl
+flip_net: false
+flip_net_ft: true
+flip_net_random_mlp: false
+load_weights: true
+freeze_weight: false
+postR: 50
+sample_per_subject: 1500
+net_root: "/data/UKBB/SSL/day_sec_100/models/final_100.mdl"
+task_name: aot
+flip_net_path: "/data/UKBB/SSL/day_sec_1k/logs/models/1k_mtl/${evaluation.task_name}.mdl"
+input_size: 300  # input size after resampling the raw data
+epoch_idx: 0
+subR: 1
+
+# hyper-parameters
+learning_rate: 0.0001
+num_workers: 6
+patience: 5
+num_epoch: 200
+
+evaluation_name: "flip_net_ft_1k_postR${evaluation.postR}_${evaluation.sample_per_subject}"

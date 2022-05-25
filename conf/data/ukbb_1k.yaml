@@ -1,0 +1,11 @@
+data_root: /data/UKBB/SSL/one_day_raw_1k
+train_data_root: "${data.data_root}/data/train"
+test_data_root: "${data.data_root}/data/test"
+train_file_list: "${data.train_data_root}/file_list.csv"
+test_file_list: "${data.test_data_root}/file_list.csv"
+log_path: "${data.data_root}/logs/"
+batch_size: 4
+log_interval: 10
+data_name: "1k"
+weighted_sample: false
+ratio2keep: 1

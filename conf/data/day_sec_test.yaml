@@ -1,0 +1,11 @@
+data_root: /data/UKBB/SSL/day_sec_test
+train_data_root: "${data.data_root}/data/train"
+test_data_root: "${data.data_root}/data/test"
+train_file_list: "${data.train_data_root}/file_list.csv"
+test_file_list: "${data.test_data_root}/file_list.csv"
+log_path: "${data.data_root}/logs/"
+batch_subject_num: 2
+log_interval: 1
+data_name: "1"
+weighted_sample: true
+ratio2keep: 1

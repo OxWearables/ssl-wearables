@@ -1,0 +1,7 @@
+learning_rate: 0.0001
+name: "mtl_baseline_rotation${task.rotation}_time${task.time_reversal}_data${data.data_name}_lr${model.learning_rate}\
+       _resnet${model.resnet}_resnet_big${model.resnet_big}"
+mixed_precision: false
+resnet: false
+resnet_big: false
+warm_up_step: 5

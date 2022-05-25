@@ -1,0 +1,3 @@
+learning_rate: 0.0001
+isSmall: false
+name: "baseline_WinLen${data.win_length}_BiDi${data.isBidirectional}_Meta${data.meta_data_size}_Aug${runtime.augment}"
