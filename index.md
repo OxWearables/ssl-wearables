@@ -53,6 +53,7 @@ We used self-supervision to train a ResNet16 V2 with 1D convolution. We inverted
 
 ## Using the pre-trained model
 ```python
+import torch
 import numpy as np
 
 repo = 'OxWearables/ssl-wearables'
