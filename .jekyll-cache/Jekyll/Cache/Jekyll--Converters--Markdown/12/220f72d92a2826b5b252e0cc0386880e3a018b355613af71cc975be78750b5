@@ -1,34 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-  
-  <head>
-  <meta charset="UTF-8">
-  <title>Self-supervised Learning for Human Activity Recognition Using 700,000 Person-days of Wearable Data</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#157878">
-  <link rel="stylesheet" href="/ssl-wearables/css/normalize.css">
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="/ssl-wearables/css/cayman.css">
-</head>
-
-  <body>
-    <section class="page-header">
-  <h1 class="project-name">Self-supervised Learning for Human Activity Recognition Using 700,000 Person-days of Wearable Data</h1>
-  <h2 class="project-tagline">Hang Yuan*<sup>1,2,4</sup>, Shing Chan*<sup>1,2</sup>, Andrew P. Creagh<sup>2,3</sup>, Catherine Tong<sup>4</sup>, David A. Clifton<sup>3</sup>, Aiden Doherty<sup>1,2</sup></h2>
-  <h2 class="project-tagline">Nuffield Department of Population Health, University of Oxford<sup>1</sup>,  Big Data Institute, University of Oxford <sup>2</sup>,  Department of Engineering Science, University of Oxford  <sup>3</sup>,  Department of Computer Science, University of Oxford <sup>4</sup></h2>
-
-  <!--Remove the line(s) below if you don't need the buttons. -->
-  <a href="https://github.com/OxWearables/ssl-wearables" class="btn">Code</a>  
-  <a href="https://github.com/OxWearables/ssl-wearables" class="btn">Paper</a>
-</section>
-
-
-
-
-
-    <section class="main-content">
-      
-      <!------------------------------------------ Hyperlinks ---------------------------------------------------->
+I"#<!------------------------------------------ Hyperlinks ---------------------------------------------------->
 <!--- If you want to update links for your code/paper/demo, modify that in _includes/page-header.html   -->
 <!------------------------------------- End of hyperlinks -------------------------------------------------->
 
@@ -56,27 +26,10 @@
 <!---------------------------------------------------------------------------------------------------------->
 <!------------------------------------------ Main body ------------------------------------------------------>
 <h1 id="summary">Summary</h1>
-<p><strong>We developed a foundation model for human activity recognition (HAR) using self-supervision. The pre-trained model is available to build high-performance human activity classifiers using accelerometer data.</strong></p>
-
-<p><code class="language-plaintext highlighter-rouge">harnet10</code> takes data that is 10-second long windows with 30hz of frequency. <code class="language-plaintext highlighter-rouge">harnet30</code> for 30-second long windows will be avaliable at
-a later date.</p>
-
-<p>We used self-supervision to train a ResNet16 V2 with 1D convolution. We inverted (arrow of the time), permuted, and time-warped the accelerometer data.</p>
+<p><strong>We developed a foundation model for human activity recognition (HAR) using self-supervision. The pre-trained model is avaliable to build
+high-performance human activity classifier using accelerometers data.</strong></p>
 
 <p><img src="assets/ssl_diagram.jpg" alt="alt text" title="Overview" /></p>
-
-<h2 id="using-the-pre-trained-model">Using the pre-trained model</h2>
-<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
-
-<span class="n">repo</span> <span class="o">=</span> <span class="s">'OxWearables/ssl-wearables'</span>
-<span class="n">harnet10</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">hub</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s">'harnet10'</span><span class="p">,</span> <span class="n">class_num</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="n">harnet10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-</code></pre></div></div>
-
-<h1 id="results">Results</h1>
 
 <h3 id="the-pre-trained-model-can-consistenly-improve-activity-classification-performance">The pre-trained model can consistenly improve activity classification performance</h3>
 <p><img src="assets/baseline.png" alt="alt text" title="limited_subject" /></p>
@@ -89,6 +42,19 @@ a later date.</p>
 
 <h3 id="the-learnt-features-can-discriminate-activity-intensities-and-frequencies-without-fine-tuning">The learnt features can discriminate activity intensities and frequencies without fine-tuning</h3>
 <p><img src="assets/visu.png" alt="alt text" title="cluster" /></p>
+
+<h1 id="using-the-pre-trained-model">Using the pre-trained model</h1>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="n">repo</span> <span class="o">=</span> <span class="s">'OxWearables/ssl-wearables'</span>
+<span class="n">harnet10</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">hub</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s">'harnet10'</span><span class="p">,</span> <span class="n">class_num</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">harnet10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+<p><code class="language-plaintext highlighter-rouge">harnet10</code> takes data that is 10-second long windows with 30hz of frequency. <code class="language-plaintext highlighter-rouge">harnet30</code> for 30-second long windows will be avaliable at
+a later date.</p>
 
 <h2 id="bibliography">Bibliography</h2>
 
@@ -110,11 +76,4 @@ a later date.</p>
 This research has been conducted using the UK Biobank Resource under Application Number 59070. This work is supported by: Novo Nordisk (HY, AD); the Wellcome Trust [223100/Z/21/Z] (AD); GlaxoSmithKline (AC, DC); the British Heart Foundation Centre of Research Excellence [RE/18/3/34214] (AD); the National Institute for Health Research (NIHR) Oxford Biomedical Research Centre (AD, DC); and Health Data Research UK, an initiative funded by UK Research and Innovation, Department of Health and Social Care (England) and the devolved administrations, and leading medical research charities. It is also supported by the UK’s Engineering and Physical Sciences Research Council (EPSRC) with grants EP/S001530/1 (the MOA project) and EP/R018677/1 (the OPERA project); and the European Research Council (ERC) via the REDIAL project (Grant Agreement ID: 805194), and industrial funding from Samsung AI.
 We would also like to thank Alex Rowlands and Mike Catt, who kindly shared their activity dataset with us. Their project was funded by a grant from Unilever Discover to the School of Sports and Health Sciences, University of Exeter.</p>
 </blockquote>
-
-
-      
-
-    </section>
-
-  </body>
-</html>
+:ET

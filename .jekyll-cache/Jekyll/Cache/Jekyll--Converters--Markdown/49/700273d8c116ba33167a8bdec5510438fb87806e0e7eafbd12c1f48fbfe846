@@ -1,26 +1,14 @@
----
-layout: default
-title: Self-supervised Learning for Human Activity Recognition Using 700,000 Person-days of \\ Wearable Data
-author: Hang Yuan*<sup>1,2,4</sup>, Shing Chan*<sup>1,2</sup>, Andrew P. Creagh<sup>2,3</sup>, Catherine Tong<sup>4</sup>,
-David A. Clifton<sup>3</sup>, Aiden Doherty<sup>1,2</sup>
-affiliation: Nuffield Department of Population Health, University of Oxford<sup>1</sup>,  Big Data Institute, University of Oxford <sup>2</sup>,  Department of Engineering Science, University of Oxford  <sup>3</sup>,  Department of Computer Science, University of Oxford <sup>4</sup>
----
-
-<!------------------------------------------ Hyperlinks ---------------------------------------------------->
+I"<<!------------------------------------------ Hyperlinks ---------------------------------------------------->
 <!--- If you want to update links for your code/paper/demo, modify that in _includes/page-header.html   -->
 <!------------------------------------- End of hyperlinks -------------------------------------------------->
 
-
-
-
-
 <!---------------------------------------------------------------------------------------------------------->
 <!----------------------------------------- Abstract ------------------------------------------------------->
+<hr />
 
-<hr>
-  <p style="text-align: center;">Abstract</p>
+<p style="text-align: center;">Abstract</p>
 
-  <p>
+<p>
     Advances in deep learning for human activity recognition have been relatively limited due to the lack of large labelled datasets. 
     In this study, we leverage self-supervised learning techniques on the UK-Biobank activity tracker dataset--the largest of 
     its kind to date--containing more than 700,000 person-days of unlabelled wearable sensor data. Our resulting activity 
@@ -30,49 +18,51 @@ affiliation: Nuffield Department of Population Health, University of Oxford<sup>
     to build customisable and generalisable activity classifiers with high performance.
 
   </p>
-<hr>
+<hr />
 
 <!--------------------------------------- End abstract ----------------------------------------------------->
 <!---------------------------------------------------------------------------------------------------------->
 
-
-
-
 <!---------------------------------------------------------------------------------------------------------->
 <!------------------------------------------ Main body ------------------------------------------------------>
-<h1>Main body</h1>
-<p>Text can be <strong>bold</strong>, <em>italic</em>, or <del>strikethrough</del>. <a href="https://github.com">Links</a> should be blue with no underlines (unless hovered over).</p>
+<h1>Summary</h1>
+<p>We developed a foundation model for human activity recognition (HAR) using self-supervision. The pre-trained model is avaliable to build
+high-performance human activity classifier using accelerometers data.</p>
 
+<p>You can insert any images like how you should do for a markdown or html file.</p>
+<p><a href="https://github.com/OxWearables/ssl-wearables/blob/main/plots/imgs/ssl_diagram.jpg?raw=true" target="_blank">
+  <img src="https://github.com/OxWearables/ssl-wearables/blob/main/plots/imgs/ssl_diagram.jpg?raw=true" alt="" data-canonical-src="https://github.com/OxWearables/ssl-wearables/blob/main/plots/imgs/ssl_diagram.jpg?raw=true" style="max-width:100%;" /></a></p>
 
-<blockquote>
-  <p>There should be no margin above this first sentence.</p>
-
-  <p>Blockquotes should be a lighter gray with a gray border along the left side.</p>
-
-  <p>There should be no margin below this final sentence.</p>
-</blockquote>
-
-You can insert any images like how you should do for a markdown or html file.
-<p><a href="https://github.com/activityMonitoring/biobankAccelerometerAnalysis/blob/master/docs/source/samplePlotWilletts.png?raw=true" target="_blank">
-  <img src="https://github.com/activityMonitoring/biobankAccelerometerAnalysis/blob/master/docs/source/samplePlotWilletts.png?raw=true" 
-  alt="" data-canonical-src="https://github.com/activityMonitoring/biobankAccelerometerAnalysis/blob/master/docs/source/samplePlotWilletts.png?raw=true" style="max-width:100%;"></a></p>
-
-
-<h3>How to use this tool?</h3>
-
-<pre><code>pip install actipy.</code></pre> 
-
-There are more elements that you can find <a href="https://github.com/jasonlong/cayman-theme/blob/main/index.html">here</a> and  <a href="https://jasonlong.github.io/cayman-theme/">here</a>.
 <!------------------------------------- End of Main body -------------------------------------------------->
 <!---------------------------------------------------------------------------------------------------------->
 
+<!---------------------------------------------------------------------------------------------------------->
+<!------------------------------------------ Usage ------------------------------------------------------>
+<h1>Using the pre-trained model</h1>
+<p>To use the pre-trained model for your own research:</p>
+
+<pre class="highlight highlight-python"><code>import torch
+import numpy as np
+
+repo = 'OxWearables/ssl-wearables'
+harnet10 = torch.hub.load(repo, 'harnet10', class_num=5, pretrained=True)
+
+x = np.random.rand(1, 3, 300)
+x = torch.FloatTensor(x)
+harnet10(x)
+</code></pre>
+
+<p><code>harnet10</code> takes data that is 10-second long windows with 30hz of frequency. <code>harnet30</code> for 30-second long windows will be avaliable at
+a later date.</p>
+
+<!------------------------------------- End of Main body -------------------------------------------------->
+<!---------------------------------------------------------------------------------------------------------->
 
 <!---------------------------------------------------------------------------------------------------------->
 <!------------------------------------------ Reference ---------------------------------------------------->
-  <h4 style="text-align: center;">Bibliography</h4>
+<h4 style="text-align: center;">Bibliography</h4>
 
-  <pre><code>
-    @article{doherty2017large,
+<pre><code>@article{doherty2017large,
     title={Large scale population assessment of physical activity using wrist worn accelerometers: the UK biobank study},
     author={Doherty, Aiden and Jackson, Dan and Hammerla, Nils and Pl{\"o}tz, Thomas and Olivier, Patrick and Granat, Malcolm H and White, Tom and Van Hees, Vincent T and Trenell, Michael I and Owen, Christoper G and others},
     journal={PloS one},
@@ -81,25 +71,29 @@ There are more elements that you can find <a href="https://github.com/jasonlong/
     pages={e0169649},
     year={2017},
     publisher={Public Library of Science San Francisco, CA USA}}
-</code></pre> 
-
+</code></pre>
 
 <!------------------------------------- End of Reference -------------------------------------------------->
 <!---------------------------------------------------------------------------------------------------------->
 
-
-
 <!---------------------------------------------------------------------------------------------------------->
 <!------------------------------------------ Acknowedlgement ----------------------------------------------->
 
-<hr>
-  <h4 style="text-align: center;">Acknowedlgement</h4>
+<hr />
 
-  <p>
-    We thank the good will of people who supported this work.
+<h4 style="text-align: center;">Acknowedlgement</h4>
+
+<p>
+    We would like to thank all the helpful discussions and feedback we recevied from Aiden Acquah, Gert Mertes, Henrique Aguiar, Andres Tamm, and Korsuk Sirinukunwattana.
+
+This research has been conducted using the UK Biobank Resource under Application Number 59070. This work is supported by: Novo Nordisk (HY, AD); the Wellcome Trust [223100/Z/21/Z] (AD); GlaxoSmithKline (AC, DC); the British Heart Foundation Centre of Research Excellence [RE/18/3/34214] (AD); the National Institute for Health Research (NIHR) Oxford Biomedical Research Centre (AD, DC); and Health Data Research UK, an initiative funded by UK Research and Innovation, Department of Health and Social Care (England) and the devolved administrations, and leading medical research charities. It is also supported by the UK’s Engineering and Physical Sciences Research Council (EPSRC) with grants EP/S001530/1 (the MOA project) and EP/R018677/1 (the OPERA project); and the European Research Council (ERC) via the REDIAL project (Grant Agreement ID: 805194), and industrial funding from Samsung AI.
+
+We would also like to thank Alex Rowlands and Mike Catt, who kindly shared their activity dataset with us. Their project was funded by a grant from Unilever Discover to the School of Sports and Health Sciences, University of Exeter.
+
   </p>
-<hr>
+<hr />
 
 <!--------------------------------------- End of Acknowedlgement ------------------------------------------->
 <!---------------------------------------------------------------------------------------------------------->
 
+:ET

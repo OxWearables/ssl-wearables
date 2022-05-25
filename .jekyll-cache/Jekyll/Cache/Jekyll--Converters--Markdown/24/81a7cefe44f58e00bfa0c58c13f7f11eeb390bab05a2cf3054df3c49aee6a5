@@ -1,0 +1,74 @@
+I"´<!------------------------------------------ Hyperlinks ---------------------------------------------------->
+<!--- If you want to update links for your code/paper/demo, modify that in _includes/page-header.html   -->
+<!------------------------------------- End of hyperlinks -------------------------------------------------->
+
+<!---------------------------------------------------------------------------------------------------------->
+<!----------------------------------------- Abstract ------------------------------------------------------->
+<hr />
+
+<p style="text-align: center;">Abstract</p>
+
+<p>
+    Advances in deep learning for human activity recognition have been relatively limited due to the lack of large labelled datasets. 
+    In this study, we leverage self-supervised learning techniques on the UK-Biobank activity tracker dataset--the largest of 
+    its kind to date--containing more than 700,000 person-days of unlabelled wearable sensor data. Our resulting activity 
+    recognition model consistently outperformed strong baselines across seven benchmark datasets, with an F1 relative improvement 
+    of 2.5%-100% (median 18.4%), the largest improvements occurring in the smaller datasets. In contrast to previous studies, 
+    our results generalise across external datasets, devices, and environments. Our open-source model will help researchers and developers 
+    to build customisable and generalisable activity classifiers with high performance.
+
+  </p>
+<hr />
+
+<!--------------------------------------- End abstract ----------------------------------------------------->
+<!---------------------------------------------------------------------------------------------------------->
+
+<!---------------------------------------------------------------------------------------------------------->
+<!------------------------------------------ Main body ------------------------------------------------------>
+<h1>Summary</h1>
+<p>We developed a foundation model for human activity recognition (HAR) using self-supervision. The pre-trained model is avaliable to build
+high-performance human activity classifier using accelerometers data.</p>
+
+<p>You can insert any images like how you should do for a markdown or html file.</p>
+<p><a href="https://github.com/OxWearables/ssl-wearables/blob/main/plots/imgs/ssl_diagram.jpg?raw=true" target="_blank">
+  <img src="https://github.com/OxWearables/ssl-wearables/blob/main/plots/imgs/ssl_diagram.jpg?raw=true" alt="" data-canonical-src="https://github.com/OxWearables/ssl-wearables/blob/main/plots/imgs/ssl_diagram.jpg?raw=true" style="max-width:100%;" /></a></p>
+
+<!------------------------------------- End of Main body -------------------------------------------------->
+<!---------------------------------------------------------------------------------------------------------->
+
+<!---------------------------------------------------------------------------------------------------------->
+<!------------------------------------------ Usage ------------------------------------------------------>
+<h2 id="using-the-pre-trained-model">Using the pre-trained model</h2>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="n">repo</span> <span class="o">=</span> <span class="s">'OxWearables/ssl-wearables'</span>
+<span class="n">harnet10</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">hub</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="s">'harnet10'</span><span class="p">,</span> <span class="n">class_num</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="p">.</span><span class="n">FloatTensor</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="n">harnet10</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+<p><code class="language-plaintext highlighter-rouge">harnet10</code> takes data that is 10-second long windows with 30hz of frequency. <code class="language-plaintext highlighter-rouge">harnet30</code> for 30-second long windows will be avaliable at
+a later date.</p>
+
+<h2 id="bibliography">Bibliography</h2>
+
+<div class="language-tex highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@article<span class="p">{</span>doherty2017large,
+    title=<span class="p">{</span>Large scale population assessment of physical activity using wrist worn accelerometers: the UK biobank study<span class="p">}</span>,
+    author=<span class="p">{</span>Doherty, Aiden and Jackson, Dan and Hammerla, Nils and Pl<span class="p">{</span><span class="k">\"</span>o<span class="p">}</span>tz, Thomas and Olivier, Patrick and Granat, Malcolm H and White, Tom and Van Hees, Vincent T and Trenell, Michael I and Owen, Christoper G and others<span class="p">}</span>,
+    journal=<span class="p">{</span>PloS one<span class="p">}</span>,
+    volume=<span class="p">{</span>12<span class="p">}</span>,
+    number=<span class="p">{</span>2<span class="p">}</span>,
+    pages=<span class="p">{</span>e0169649<span class="p">}</span>,
+    year=<span class="p">{</span>2017<span class="p">}</span>,
+    publisher=<span class="p">{</span>Public Library of Science San Francisco, CA USA<span class="p">}}</span>
+</code></pre></div></div>
+
+<h2 id="acknowedlgement">Acknowedlgement</h2>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>We would like to thank all the helpful discussions and feedback we recevied from Aiden Acquah, Gert Mertes, Henrique Aguiar, Andres Tamm, and Korsuk Sirinukunwattana.
+</code></pre></div></div>
+
+<p>This research has been conducted using the UK Biobank Resource under Application Number 59070. This work is supported by: Novo Nordisk (HY, AD); the Wellcome Trust [223100/Z/21/Z] (AD); GlaxoSmithKline (AC, DC); the British Heart Foundation Centre of Research Excellence [RE/18/3/34214] (AD); the National Institute for Health Research (NIHR) Oxford Biomedical Research Centre (AD, DC); and Health Data Research UK, an initiative funded by UK Research and Innovation, Department of Health and Social Care (England) and the devolved administrations, and leading medical research charities. It is also supported by the UKâ€™s Engineering and Physical Sciences Research Council (EPSRC) with grants EP/S001530/1 (the MOA project) and EP/R018677/1 (the OPERA project); and the European Research Council (ERC) via the REDIAL project (Grant Agreement ID: 805194), and industrial funding from Samsung AI.</p>
+
+<p>We would also like to thank Alex Rowlands and Mike Catt, who kindly shared their activity dataset with us. Their project was funded by a grant from Unilever Discover to the School of Sports and Health Sciences, University of Exeter.</p>
+:ET

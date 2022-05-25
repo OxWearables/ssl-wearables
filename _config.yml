@@ -1,14 +1,14 @@
 # Setup
-title:        Wearables@OX project template
+title:        OxWearables SSL-wearables
 tagline:      Communicate your research and beyond
-baseurl:      "/project_template_page"
+baseurl:      "/ssl-wearables"
 paginate:     1
 locale:       "en"
 
 # About/contact
 author:
-  name:       Wearables@OX
-  url:        https://github.com/activityMonitoring
+  name:       OxWearables
+  url:        https://oxwearables.github.io/ssl-wearables/
 
 # Gems
 gems:
