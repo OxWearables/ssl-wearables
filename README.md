@@ -6,23 +6,40 @@ This repository is the official implementation of [Self-supervised learning for 
 
 
 
+## Use the pre-trained models
+Required:
+* Python 3.7+
+* Torch 1.7+
+
+```python
+import torch
+import numpy as np
+
+repo = 'OxWearables/ssl-wearables'
+harnet10 = torch.hub.load(repo, 'harnet10', class_num=5, pretrained=True)
+x = np.random.rand(1, 3, 300)
+x = torch.FloatTensor(x)
+harnet10(x)
+```
+This is an example of a five-class prediction using 10-second long windows. The 30-second long version will be made
+avaliable at a later date.
+
+
 ## Requirements
+If you would like to develop the model for your own use, you need to follow the instructions below:
 ### Installation 
-Python 3.7+ is required.
 ```bash
 conda create -n ssl_env python=3.7
 conda activate ssl_env
 pip install -r req.txt
 ```
 
+
 ### Directory structure
 To run the models, the data directory will have to be structured in a similar fashion as below. The `ADL` dataset has been included 
 as an example. 
 ```shell
 - data: 
-  |_final_models
-    |_a.mdl
-    |_b.mdl
   |_ downstream 
     |_oppo
       |_ X.npy
@@ -43,28 +60,14 @@ as an example.
         |_models
 ```
 
-## Use the pre-trained models
-```python
-import torch
-import numpy as np
-
-repo = 'OxWearables/ssl-wearables'
-harnet10 = torch.hub.load(repo, 'harnet10', class_num=5, pretrained=True)
-x = np.random.rand(1, 3, 300)
-x = torch.FloatTensor(x)
-harnet10(x)
-```
-This is an example of a five-class prediction using 10-second long windows. The 30-second long version will be made
-avaliable at a later date.
-
 
 ## Training
 ### Self-supervised learning
-Training using the sample capture-24 for all of the three tasks can be run like this
+First you will want to download the processed capture24 dataset on your local machine. Self-supervised training on capture-24 for all of the three tasks can be run using:
 ```bash
-python mtl.py runtime.gpu=0 runtime.is_epoch_data=True data=ssl_capture_24 task=all task.scale=false augmentation=all   model=resnet data.batch_subject_num=5 dataloader=ten_sec 
+python mtl.py runtime.gpu=0 data.data_root=PATH2DATA runtime.is_epoch_data=True data=ssl_capture_24 task=all task.scale=false augmentation=all   model=resnet data.batch_subject_num=5 dataloader=ten_sec 
 ```
-It would then save the model trained into `data/ssl_capture_24/logs/models`
+It would then save the model trained into `PATH2DATA/logs/models`. 
 
 ## Fine-tunining
 You will need to specify your benchmark datasets using the config files under `conf/data` directory. 
@@ -72,8 +75,9 @@ All the specified models will be evaluated sequentially.
 ```bash
 python downstream_task_evaluation.py data=custom_10s report_root=PATH2REPORT evaluation.flip_net_path=PATH2WEIGHT data.data_root=PATH2DATA is_dist=True evaluation=all 
 ```
-Change the path of the full model to obtain different results.
-
+Change the path of the full model to obtain different results. An example `ADL` dataset has already been included in the
+`data` folder.  The weight path is the path to the model file in `model_check_point`. `report_root` can be
+anything where on your machine.
 
 ## Pre-trained Models
 You can download pretrained models here:

@@ -1,4 +1,4 @@
-antlr4-python3-runtime==4.8
+antlr4-python3-runtime>=4.8
 argon2-cffi==20.1.0
 async-generator==1.10
 async-timeout==3.0.1
@@ -51,7 +51,7 @@ notebook==6.1.4
 numpy==1.18.1
 oauthlib==3.1.0
 olefile==0.46
-omegaconf==2.0.5
+omegaconf>=2.0.5
 packaging==20.4
 pandas==1.0.3
 pandocfilters==1.4.2
