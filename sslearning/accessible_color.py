@@ -9,9 +9,15 @@ acc_yellow = [240, 228, 66]
 
 max_val = 255
 norm_acc_black = acc_black
-norm_acc_orange = [i/max_val for i in acc_orange]
-norm_acc_blue = [i/max_val for i in acc_blue]
-norm_acc_green = [i/max_val for i in acc_green]
-norm_acc_yellow = [i/max_val for i in acc_yellow]
+norm_acc_orange = [i / max_val for i in acc_orange]
+norm_acc_blue = [i / max_val for i in acc_blue]
+norm_acc_green = [i / max_val for i in acc_green]
+norm_acc_yellow = [i / max_val for i in acc_yellow]
 
-acc_ui_colors = [norm_acc_black, norm_acc_orange, norm_acc_blue, norm_acc_green, norm_acc_yellow]
+acc_ui_colors = [
+    norm_acc_black,
+    norm_acc_orange,
+    norm_acc_blue,
+    norm_acc_green,
+    norm_acc_yellow,
+]

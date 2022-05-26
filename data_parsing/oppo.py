@@ -1,11 +1,13 @@
 """
-Preprocess Opportunity data into 30s and 10s windows with a 15s and 5 sec overlap respectively
+Preprocess Opportunity data into 30s and 10s windows
+with a 15s and 5 sec overlap respectively
 We use +- 16g format
 Sample Rate: 30 Hz
 Unit: milli g
 https://archive.ics.uci.edu/ml/datasets/OPPORTUNITY+Activity+Recognition
 
-For a typical challenge, 1 sec sliding window and 50% overlap is used. Either specific sets or runs are used
+For a typical challenge, 1 sec sliding window and 50%
+overlap is used. Either specific sets or runs are used
 for training or sometimes both run count and subject count are specified.
 
 
@@ -20,6 +22,7 @@ import numpy as np
 import glob
 import os
 from tqdm import tqdm
+
 
 def get_data_content(data_path):
     # read flash.dat to a list of lists
@@ -43,7 +46,6 @@ def get_data_content(data_path):
 def content2x_and_y(data_content, epoch_len=30, sample_rate=100, overlap=15):
     sample_count = int(np.floor(len(data_content) / (epoch_len * sample_rate)))
 
-    sample_time_idx = 0
     sample_label_idx = 1
     sample_x_idx = 2
     sample_y_idx = 3
@@ -52,7 +54,6 @@ def content2x_and_y(data_content, epoch_len=30, sample_rate=100, overlap=15):
     sample_limit = sample_count * epoch_len * sample_rate
     data_content = data_content[:sample_limit, :]
 
-    times = data_content[:, sample_time_idx]
     label = data_content[:, sample_label_idx]
     x = data_content[:, sample_x_idx]
     y = data_content[:, sample_y_idx]
@@ -101,8 +102,8 @@ def clean_up_label(X, labels):
         row = labels[i, :]
         final_labels.append(s.mode(row)[0])
     final_labels = np.array(final_labels, dtype=int)
-    #print("Clean X shape: ", X.shape)
-    #print("Clean y shape: ", final_labels.shape)
+    # print("Clean X shape: ", X.shape)
+    # print("Clean y shape: ", final_labels.shape)
     return X, final_labels
 
 
@@ -126,15 +127,21 @@ def process_all(file_paths, X_path, y_path, pid_path, epoch_len, overlap):
 
     for file_path in tqdm(file_paths):
         # print(file_path)
-        subject_id = int(file_path.split('/')[-1][1:2])
+        subject_id = int(file_path.split("/")[-1][1:2])
 
         datContent = get_data_content(file_path)
-        current_X, current_y = content2x_and_y(datContent, sample_rate=sample_rate,
-                                               epoch_len=epoch_len, overlap=overlap)
+        current_X, current_y = content2x_and_y(
+            datContent,
+            sample_rate=sample_rate,
+            epoch_len=epoch_len,
+            overlap=overlap,
+        )
         current_X, current_y = clean_up_label(current_X, current_y)
         if len(current_y) == 0:
             continue
-        ids = np.full(shape=len(current_y), fill_value=subject_id, dtype=np.int)
+        ids = np.full(
+            shape=len(current_y), fill_value=subject_id, dtype=np.int
+        )
         if len(X) == 0:
             X = current_X
             y = current_y
@@ -146,7 +153,7 @@ def process_all(file_paths, X_path, y_path, pid_path, epoch_len, overlap):
 
     # post-process
     y = y.flatten()
-    X = X / 1000 # convert to g
+    X = X / 1000  # convert to g
     clip_value = 3
     X = np.clip(X, -clip_value, clip_value)
     X, y, pid = post_process_oppo(X, y, pid)
@@ -156,19 +163,19 @@ def process_all(file_paths, X_path, y_path, pid_path, epoch_len, overlap):
 
 
 def get_write_paths(data_root):
-    X_path = os.path.join(data_root, 'X.npy')
-    y_path = os.path.join(data_root, 'Y.npy')
-    pid_path = os.path.join(data_root, 'pid.npy')
+    X_path = os.path.join(data_root, "X.npy")
+    y_path = os.path.join(data_root, "Y.npy")
+    pid_path = os.path.join(data_root, "pid.npy")
     return X_path, y_path, pid_path
 
 
 def main():
-    data_root = '/data/UKBB/opportunity/'
-    data_path = data_root + 'dataset/'
+    data_root = "/data/UKBB/opportunity/"
+    data_path = data_root + "dataset/"
     file_paths = glob.glob(data_path + "*.dat")
 
     print("Processing for 30sec window..")
-    data_root = '/data/UKBB/oppo_33hz_w30_o15/'
+    data_root = "/data/UKBB/oppo_33hz_w30_o15/"
     X_path, y_path, pid_path = get_write_paths(data_root)
     epoch_len = 30
     overlap = 15
@@ -177,7 +184,7 @@ def main():
     print("Saved y to ", y_path)
 
     print("Processing for 10sec window..")
-    data_root = '/data/UKBB/oppo_33hz_w10_o5/'
+    data_root = "/data/UKBB/oppo_33hz_w10_o5/"
     X_path, y_path, pid_path = get_write_paths(data_root)
     epoch_len = 10
     overlap = 5

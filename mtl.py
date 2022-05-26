@@ -63,7 +63,7 @@ Example usage:
     python mtl.py data=day_sec_test task=time_reversal augmentation=all
 
     # multi-processed distributed parallel (DPP)
-    python mtl.py data=day_sec_10k task=time_reversal 
+    python mtl.py data=day_sec_10k task=time_reversal
     augmentation=all model=resnet
     dataloader.num_sample_per_subject=1500 data.batch_subject_num=14
     dataloader=ten_sec model.lr_scale=True

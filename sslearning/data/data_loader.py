@@ -1,4 +1,3 @@
-from os import path
 import os
 import numpy as np
 import pickle
@@ -9,7 +8,7 @@ import time
 from sslearning.utils import trans30two1
 import sslearning.myconstants as constants
 
-## SSL
+# SSL
 import sslearning.data.data_transformation as my_transforms
 import glob
 import torch.nn.functional as F
@@ -37,8 +36,7 @@ import torch.nn.functional as F
 # x: batch_size * feature size (125)
 # y: batch_size * label_size (5)
 
-###################### START OF DATA CLASS #########################
-
+# START OF DATA CLASS
 def convert_y_label(batch, label_pos):
     row_y = [item[1 + label_pos] for item in batch]
     master_y = torch.cat(row_y)
@@ -69,22 +67,30 @@ def generate_labels(X, shuffle, cfg):
 
         current_label = [0, 0, 0, 0]
         if cfg.task.time_reversal:
-            choice = np.random.choice(2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio])[0]
+            choice = np.random.choice(
+                2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+            )[0]
             current_x = my_transforms.flip(current_x, choice)
             current_label[constants.TIME_REVERSAL_POS] = choice
 
         if cfg.task.scale:
-            choice = np.random.choice(2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio])[0]
+            choice = np.random.choice(
+                2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+            )[0]
             current_x = my_transforms.scale(current_x, choice)
             current_label[constants.SCALE_POS] = choice
 
         if cfg.task.permutation:
-            choice = np.random.choice(2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio])[0]
+            choice = np.random.choice(
+                2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+            )[0]
             current_x = my_transforms.permute(current_x, choice)
             current_label[constants.PERMUTATION_POS] = choice
 
         if cfg.task.time_warped:
-            choice = np.random.choice(2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio])[0]
+            choice = np.random.choice(
+                2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+            )[0]
             current_x = my_transforms.time_warp(current_x, choice)
             current_label[constants.TIME_WARPED_POS] = choice
 
@@ -110,15 +116,17 @@ def check_file_list(file_list_path, data_root, cfg):
     if os.path.isfile(file_list_path) is False:
         csv_files = []
 
-        if cfg.data.data_name == '100k':
-            file_list = glob.glob(os.path.join(data_root, '*', 'data', "*.npy"))
+        if cfg.data.data_name == "100k":
+            file_list = glob.glob(
+                os.path.join(data_root, "*", "data", "*.npy")
+            )
         else:
             file_list = glob.glob(data_root + "/*.npy")
 
         for file in file_list:
             csv_files.append(file)
 
-        file_dict = {'file_list': csv_files}
+        file_dict = {"file_list": csv_files}
         df = pd.DataFrame(file_dict)
         df.to_csv(file_list_path, index=False)
 
@@ -137,10 +145,12 @@ def separate_data(my_data):
 
 def time2window(sample, sample_len):
     """
-    Convert time format of shape N x 3 x 30 data into an epoch format of 3 x sample_len
+    Convert time format of shape N x 3 x 30 data
+    into an epoch format of 3 x sample_len
     Args:
         sample: data of shape N x 3 x 30
-        sample_len (int): sample_rate x epoch_len (sec)
+        sample_len (int):
+            sample_rate x epoch_len (sec)
     Returns:
         final_sample (ny_array): shape 3 x sample_len
     """
@@ -154,11 +164,18 @@ def time2window(sample, sample_len):
     return final_sample
 
 
-def weighted_sample(data_with_std, num_sample=400, epoch_len=30, sample_rate=30, is_weighted_sample=False):
+def weighted_sample(
+    data_with_std,
+    num_sample=400,
+    epoch_len=30,
+    sample_rate=30,
+    is_weighted_sample=False,
+):
     """
     Weighted sample the windows that have most motion
     Args:
-        data_with_std (np_array) of shape N x 3 x 31: last ele is the std per sec. We
+        data_with_std (np_array) of shape N x 3 x 31:
+        last ele is the std per sec. We
         assume the sampling rate is 30hz.
         num_sample (int): windows to sample per subject
         epoch_len (int): how long should each epoch last in sec
@@ -171,7 +188,12 @@ def weighted_sample(data_with_std, num_sample=400, epoch_len=30, sample_rate=30,
 
     mov_avg = running_mean(data_std, epoch_len)
     if is_weighted_sample:
-        sample_ides = np.random.choice(len(mov_avg), num_sample, replace=False, p=mov_avg / np.sum(mov_avg))
+        sample_ides = np.random.choice(
+            len(mov_avg),
+            num_sample,
+            replace=False,
+            p=mov_avg / np.sum(mov_avg),
+        )
     else:
         sample_ides = np.random.choice(len(mov_avg), num_sample, replace=False)
 
@@ -180,7 +202,7 @@ def weighted_sample(data_with_std, num_sample=400, epoch_len=30, sample_rate=30,
     sampled_data = np.zeros([num_sample, channel_count, sample_len])
     for ii in range(num_sample):
         idx = sample_ides[ii]
-        current_sample = ori_data[idx:idx + epoch_len, :, :]
+        current_sample = ori_data[idx : idx + epoch_len, :, :]
         sampled_data[ii, :] = time2window(current_sample, sample_len)
     return sampled_data
 
@@ -189,7 +211,8 @@ def weighted_epoch_sample(data_with_std, num_sample=400):
     """
     Weighted sample the windows that have most motion
     Args:
-        data_with_std (np_array) of shape N x 3 x 31: last ele is the std per sec. We
+        data_with_std (np_array) of shape N x 3 x 31:
+         last ele is the std per sec. We
         assume the sampling rate is 30hz.
         num_sample (int): windows to sample per subject
         epoch_len (int): how long should each epoch last in sec
@@ -201,7 +224,9 @@ def weighted_epoch_sample(data_with_std, num_sample=400):
     ori_data = data_with_std[:, :, :300]
     data_std = data_with_std[:, :, -1][:, 0]
 
-    sample_ides = np.random.choice(len(ori_data), num_sample, replace=False, p=data_std/np.sum(data_std))
+    sample_ides = np.random.choice(
+        len(ori_data), num_sample, replace=False, p=data_std / np.sum(data_std)
+    )
 
     sampled_data = np.zeros([num_sample, 3, 300])
     for ii in range(num_sample):
@@ -211,19 +236,24 @@ def weighted_epoch_sample(data_with_std, num_sample=400):
     return sampled_data
 
 
-class SSL_dataset():
-
-    def __init__(self, data_root,
-                 file_list_path,
-                 cfg, transform=None,
-                 shuffle=False, is_epoch_data=False):
+class SSL_dataset:
+    def __init__(
+        self,
+        data_root,
+        file_list_path,
+        cfg,
+        transform=None,
+        shuffle=False,
+        is_epoch_data=False,
+    ):
         """
         Args:
             data_root (string): directory containing all data files
             file_list_path (string): file list
             cfg (dict): config
             shuffle (bool): whether permute epoches within one subject
-            is_epoch_data (bool): whether each sample is one second of data or 10 seconds of data
+            is_epoch_data (bool): whether each sample is one
+            second of data or 10 seconds of data
 
 
         Returns:
@@ -232,7 +262,7 @@ class SSL_dataset():
         """
         check_file_list(file_list_path, data_root, cfg)
         file_list_df = pd.read_csv(file_list_path)
-        self.file_list = file_list_df['file_list'].to_list()
+        self.file_list = file_list_df["file_list"].to_list()
         self.data_root = data_root
         self.cfg = cfg
         self.is_epoch_data = is_epoch_data
@@ -249,8 +279,7 @@ class SSL_dataset():
 
         # idx starts from zero
         file_to_load = self.file_list[idx]
-        X = np.load(file_to_load,
-                    allow_pickle=True)
+        X = np.load(file_to_load, allow_pickle=True)
 
         # to help select a percentage of data per subject
         subject_data_count = int(len(X) * self.ratio2keep)
@@ -259,33 +288,39 @@ class SSL_dataset():
             X = X[:subject_data_count, :]
 
         if self.is_epoch_data:
-            X = weighted_epoch_sample(X, num_sample=self.cfg.dataloader.num_sample_per_subject)
+            X = weighted_epoch_sample(
+                X, num_sample=self.cfg.dataloader.num_sample_per_subject
+            )
         else:
-            X = weighted_sample(X, num_sample=self.cfg.dataloader.num_sample_per_subject,
-                                epoch_len=self.cfg.dataloader.epoch_len,
-                                sample_rate=self.cfg.dataloader.sample_rate,
-                                is_weighted_sample=self.cfg.data.weighted_sample)
+            X = weighted_sample(
+                X,
+                num_sample=self.cfg.dataloader.num_sample_per_subject,
+                epoch_len=self.cfg.dataloader.epoch_len,
+                sample_rate=self.cfg.dataloader.sample_rate,
+                is_weighted_sample=self.cfg.data.weighted_sample,
+            )
 
         X, labels = generate_labels(X, self.shuffle, self.cfg)
 
         if self.transform:
             X = self.transform(X)
 
-        return X, labels[:, constants.TIME_REVERSAL_POS], \
-               labels[:, constants.SCALE_POS], \
-               labels[:, constants.PERMUTATION_POS], \
-               labels[:, constants.TIME_WARPED_POS]
+        return (
+            X,
+            labels[:, constants.TIME_REVERSAL_POS],
+            labels[:, constants.SCALE_POS],
+            labels[:, constants.PERMUTATION_POS],
+            labels[:, constants.TIME_WARPED_POS],
+        )
 
 
 # Return:
 # x: batch_size * feature size (125)
 # y: batch_size * label_size (5)
-class RegularDataset():
-
-    def __init__(self, data_path,
-                 file_list_path,
-                 epoch_count_path,
-                 transform=None):
+class RegularDataset:
+    def __init__(
+        self, data_path, file_list_path, epoch_count_path, transform=None
+    ):
         """
         Args:
             data_path (string): path to data
@@ -298,7 +333,7 @@ class RegularDataset():
         self.transform = transform
 
     def __len__(self):
-        return self.epoch_cumsum[-1];
+        return self.epoch_cumsum[-1]
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
@@ -306,11 +341,10 @@ class RegularDataset():
 
         # idx starts from zero
         file_id = np.searchsorted(self.epoch_cumsum, idx - 1)
-        file_to_load = os.path.join(self.data_path,
-                                    self.file_list[file_id] + ".npz")
-        X = np.load(file_to_load,
-                    mmap_mode='r',
-                    allow_pickle=True)
+        file_to_load = os.path.join(
+            self.data_path, self.file_list[file_id] + ".npz"
+        )
+        X = np.load(file_to_load, mmap_mode="r", allow_pickle=True)
         if file_id == 0:
             row_id = idx - 1
         else:
@@ -322,18 +356,23 @@ class RegularDataset():
         return sample
 
 
-class SlidingWindowDataset():
-
+class SlidingWindowDataset:
     def get_lookup_table(self, meta_df):
-        ids_inplace = meta_df['pid'].unique()
+        ids_inplace = meta_df["pid"].unique()
         firstIndexes = []
         for my_id in ids_inplace:
-            firstIndexes.append(meta_df['pid'].where(meta_df['pid'] == my_id).first_valid_index())
+            firstIndexes.append(
+                meta_df["pid"]
+                .where(meta_df["pid"] == my_id)
+                .first_valid_index()
+            )
 
         new_idx = 0
         lookupTable = {}
-        # The lookup table will always store the index of the epoch that we wish to classify in the full dataframe
-        # In the getItem method, one only needs to load the neighboring epcohes depending on the config.
+        # The lookup table will always store the index of the
+        # epoch that we wish to classify in the full dataframe
+        # In the getItem method, one only needs to load the
+        # neighboring epcohes depending on the config.
 
         for i in range(len(firstIndexes)):
             # increment subject after subject
@@ -341,7 +380,7 @@ class SlidingWindowDataset():
 
             # compute sequence length
             if i == len(firstIndexes) - 1:
-                seq_length = len(meta_df['pid']) - currentStartingIdx
+                seq_length = len(meta_df["pid"]) - currentStartingIdx
             else:
                 seq_length = firstIndexes[i + 1] - currentStartingIdx
             new_length = seq_length - self.win_length + 1
@@ -357,16 +396,18 @@ class SlidingWindowDataset():
                 new_idx += 1
         return lookupTable
 
-    def __init__(self,
-                 X,
-                 y=[],
-                 context_data=None,
-                 isLabel=False,
-                 win_length=1,
-                 isBidirectional=False,
-                 pid_list=None,
-                 transform=None,
-                 target_transform=None):
+    def __init__(
+        self,
+        X,
+        y=[],
+        context_data=None,
+        isLabel=False,
+        win_length=1,
+        isBidirectional=False,
+        pid_list=None,
+        transform=None,
+        target_transform=None,
+    ):
         """
         Y needs to be in one-hot encoding
         X needs to be in N * Width
@@ -375,20 +416,27 @@ class SlidingWindowDataset():
             files_to_load (list): subject names
             currently all npz format should allow support multiple ext
             win_length: specify the epoch length of the sliding window
-            isBidirectional: if true, the win_length has to be odd and the target
-            epoch is the on is the middle. If false, the win_length needs to be >= 1,
+            isBidirectional: if true, the win_length has to
+            be odd and the target epoch is the on is the middle.
+             If false, the win_length needs to be >= 1,
             and the target epoch is the last one
             pid_list: a list or numpy array
         """
 
         if isBidirectional and win_length % 2 == 0:
-            raise ValueError("isBidirectional is True but win_length is not odd!")
+            raise ValueError(
+                "isBidirectional is True but win_length is not odd!"
+            )
 
-        pid_list = pd.DataFrame(data=pid_list, columns=['pid'])
-        ids_inplace = pid_list['pid'].unique()
+        pid_list = pd.DataFrame(data=pid_list, columns=["pid"])
+        ids_inplace = pid_list["pid"].unique()
         lastIndexes = []
         for my_id in ids_inplace:
-            lastIndexes.append(pid_list['pid'].where(pid_list['pid'] == my_id).last_valid_index())
+            lastIndexes.append(
+                pid_list["pid"]
+                .where(pid_list["pid"] == my_id)
+                .last_valid_index()
+            )
 
         self.win_length = win_length
         self.isBidirectional = isBidirectional
@@ -416,9 +464,11 @@ class SlidingWindowDataset():
         idx2load = self.lookupTable[idx]
         if self.isBidirectional:
             halfWinLength = int((self.win_length - 1) / 2)
-            sample = self.X[idx2load - halfWinLength:idx2load + halfWinLength + 1, :]  # the second idx is not inclusive
+            sample = self.X[
+                idx2load - halfWinLength : idx2load + halfWinLength + 1, :
+            ]  # the second idx is not inclusive
         else:
-            sample = self.X[idx2load - self.win_length + 1:idx2load + 1, :]
+            sample = self.X[idx2load - self.win_length + 1 : idx2load + 1, :]
 
         if self.context_data is not None:
             context_data = self.context_data[idx2load, :]
@@ -427,7 +477,7 @@ class SlidingWindowDataset():
         sample = torch.flatten(sample, 1)
 
         y = []
-        if (self.isLabel):
+        if self.isLabel:
             y = self.y[idx2load]
 
             if self.targetTransform:
@@ -441,14 +491,8 @@ class SlidingWindowDataset():
             return sample, y, context_data
 
 
-class cnnLSTMDataset():
-
-    def __init__(self,
-                 X,
-                 pid=[],
-                 y=[],
-                 transform=None,
-                 target_transform=None):
+class cnnLSTMDataset:
+    def __init__(self, X, pid=[], y=[], transform=None, target_transform=None):
         """
         Y needs to be in one-hot encoding
         X needs to be in N * Width
@@ -491,15 +535,16 @@ class cnnLSTMDataset():
 
 
 class NormalDataset:
-
-    def __init__(self,
-                 X,
-                 y=[],
-                 pid=[],
-                 name="",
-                 isLabel=False,
-                 transform=None,
-                 target_transform=None):
+    def __init__(
+        self,
+        X,
+        y=[],
+        pid=[],
+        name="",
+        isLabel=False,
+        transform=None,
+        target_transform=None,
+    ):
         """
         Y needs to be in one-hot encoding
         X needs to be in N * Width
@@ -548,7 +593,8 @@ def generate_labels_double(X, shuffle):
         # rotatioin: 0
         # axis_switch: 1
 
-        # We will have the epoch label for all tasks even if when we don't use the tasks
+        # We will have the epoch label for all tasks even
+        # if when we don't use the tasks
         # We only set the task specific label when we use it
         choice = 0
         trans_x = my_transforms.flip(current_x, choice)
@@ -576,14 +622,13 @@ def generate_labels_double(X, shuffle):
     return new_X, labels
 
 
-class subject_dataset():
-
+class subject_dataset:
     def __init__(self, data_root, num_sample_per_subject=1500, has_std=False):
         """
-        Enumerates weighted sampled for a single subject 
-        
+        Enumerates weighted sampled for a single subject
+
         Args:
-            data_root (string): path to subject npy file 
+            data_root (string): path to subject npy file
 
         Returns:
             data : transformed sample
@@ -593,7 +638,9 @@ class subject_dataset():
 
         data = np.load(data_root, allow_pickle=True)
         if has_std:
-            X = weighted_sample(data, num_sample=num_sample_per_subject, epoch_len=10)
+            X = weighted_sample(
+                data, num_sample=num_sample_per_subject, epoch_len=10
+            )
 
         else:
             # transform to N x 3 x 31
@@ -610,7 +657,9 @@ class subject_dataset():
             master_data = np.concatenate((master_data, std_data), axis=2)
 
             # Get all the wegihted samples
-            X = weighted_sample(master_data, num_sample=num_sample_per_subject, epoch_len=10)
+            X = weighted_sample(
+                master_data, num_sample=num_sample_per_subject, epoch_len=10
+            )
 
         X, labels = generate_labels_double(X, False)
         self.num_size = len(X)

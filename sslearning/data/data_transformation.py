@@ -1,6 +1,6 @@
 import numpy as np
 from transforms3d.axangles import axangle2mat  # for rotation
-from scipy.interpolate import CubicSpline      # for warping
+from scipy.interpolate import CubicSpline  # for warping
 import math
 
 """
@@ -10,7 +10,7 @@ We assume that the input format is of size:
 
 Transformations included:
 0. jitter
-1. Rotation: degree 
+1. Rotation: degree
 2. Channel shuffling: which axis is being switched
 3. Horizontal flip: binary
 4. Permutation: binary
@@ -19,20 +19,22 @@ This script is mostly based off from
 https://github.com/terryum/Data-Augmentation-For-Wearable-Sensor-Data/blob/master/Example_DataAugmentation_TimeseriesData.py
 """
 
+
 def rotation(sample, choice):
     """
     Rotate along one axis
 
     Args:
         sample (numpy array):  3 * FEATURE_SIZE
-        choice (float): [0, 9] for each axis, we can do 4 rotations 0, 90 180, 270
+        choice (float): [0, 9] for each axis,
+        we can do 4 rotations 0, 90 180, 270
     """
     if choice == 9:
         return sample
 
     axis_choices = [[0, 0, 1], [0, 1, 0], [1, 0, 0]]
-    angle_choices = [1/4*np.pi, 1/2*np.pi, 3/4*np.pi]
-    axis = axis_choices[math.floor(choice/3)]
+    angle_choices = [1 / 4 * np.pi, 1 / 2 * np.pi, 3 / 4 * np.pi]
+    axis = axis_choices[math.floor(choice / 3)]
     angle = angle_choices[choice % 3]
 
     sample = np.swapaxes(sample, 0, 1)
@@ -87,16 +89,20 @@ def DA_Permutation(X, nPerm=4, minSegLength=10):
     X_new = np.zeros(X.shape)
     idx = np.random.permutation(nPerm)
     bWhile = True
-    while bWhile == True:
-        segs = np.zeros(nPerm+1, dtype=int)
-        segs[1:-1] = np.sort(np.random.randint(minSegLength, X.shape[0]-minSegLength, nPerm-1))
+    while bWhile is True:
+        segs = np.zeros(nPerm + 1, dtype=int)
+        segs[1:-1] = np.sort(
+            np.random.randint(
+                minSegLength, X.shape[0] - minSegLength, nPerm - 1
+            )
+        )
         segs[-1] = X.shape[0]
-        if np.min(segs[1:]-segs[0:-1]) > minSegLength:
+        if np.min(segs[1:] - segs[0:-1]) > minSegLength:
             bWhile = False
     pp = 0
     for ii in range(nPerm):
-        x_temp = X[segs[idx[ii]]:segs[idx[ii]+1],:]
-        X_new[pp:pp+len(x_temp),:] = x_temp
+        x_temp = X[segs[idx[ii]] : segs[idx[ii] + 1], :]
+        X_new[pp : pp + len(x_temp), :] = x_temp
         pp += len(x_temp)
     return X_new
 
@@ -119,7 +125,8 @@ def permute(sample, choice, nPerm=4, minSegLength=10):
 
 def is_scaling_factor_invalid(scaling_factor, min_scale_sigma):
     """
-    Ensure each of the abs values of the scaling factors are greater than the min
+    Ensure each of the abs values of the scaling
+    factors are greater than the min
     """
     for i in range(len(scaling_factor)):
         if abs(scaling_factor[i] - 1) < min_scale_sigma:
@@ -128,20 +135,28 @@ def is_scaling_factor_invalid(scaling_factor, min_scale_sigma):
 
 
 def DA_Scaling(X, sigma=0.3, min_scale_sigma=0.05):
-    scaling_factor = np.random.normal(loc=1.0, scale=sigma, size=(1, X.shape[1]))  # shape=(1,3)
+    scaling_factor = np.random.normal(
+        loc=1.0, scale=sigma, size=(1, X.shape[1])
+    )  # shape=(1,3)
     while is_scaling_factor_invalid(scaling_factor, min_scale_sigma):
-        scaling_factor = np.random.normal(loc=1.0, scale=sigma, size=(1, X.shape[1]))
+        scaling_factor = np.random.normal(
+            loc=1.0, scale=sigma, size=(1, X.shape[1])
+        )
     my_noise = np.matmul(np.ones((X.shape[0], 1)), scaling_factor)
-    X = X*my_noise
+    X = X * my_noise
     return X
 
 
-def scaling_uniform(X, scale_range=.15, min_scale_diff=.02):
+def scaling_uniform(X, scale_range=0.15, min_scale_diff=0.02):
     low = 1 - scale_range
     high = 1 + scale_range
-    scaling_factor = np.random.uniform(low=low, high=high, size=(X.shape[1]))  # shape=(3)
+    scaling_factor = np.random.uniform(
+        low=low, high=high, size=(X.shape[1])
+    )  # shape=(3)
     while is_scaling_factor_invalid(scaling_factor, min_scale_diff):
-        scaling_factor = np.random.uniform(low=low, high=high, size=(X.shape[1]))
+        scaling_factor = np.random.uniform(
+            low=low, high=high, size=(X.shape[1])
+        )
 
     for i in range(3):
         X[:, i] = X[:, i] * scaling_factor[i]
@@ -149,28 +164,39 @@ def scaling_uniform(X, scale_range=.15, min_scale_diff=.02):
     return X
 
 
-def scale(sample, choice, scale_range=.5, min_scale_diff=0.15):
+def scale(sample, choice, scale_range=0.5, min_scale_diff=0.15):
     if choice == 1:
         sample = np.swapaxes(sample, 0, 1)
-        sample = scaling_uniform(sample, scale_range=scale_range, min_scale_diff=min_scale_diff)
+        sample = scaling_uniform(
+            sample, scale_range=scale_range, min_scale_diff=min_scale_diff
+        )
         sample = np.swapaxes(sample, 0, 1)
     return sample
 
 
 def DistortTimesteps(X, sigma=0.2):
-    tt = GenerateRandomCurves(X, sigma) # Regard these samples aroun 1 as time intervals
-    tt_cum = np.cumsum(tt, axis=0)        # Add intervals to make a cumulative graph
+    tt = GenerateRandomCurves(
+        X, sigma
+    )  # Regard these samples aroun 1 as time intervals
+    tt_cum = np.cumsum(tt, axis=0)  # Add intervals to make a cumulative graph
     # Make the last value to have X.shape[0]
-    t_scale = [(X.shape[0]-1)/tt_cum[-1, 0], (X.shape[0]-1)/tt_cum[-1, 1], (X.shape[0]-1)/tt_cum[-1, 2]]
-    tt_cum[:, 0] = tt_cum[:, 0]*t_scale[0]
-    tt_cum[:, 1] = tt_cum[:, 1]*t_scale[1]
-    tt_cum[:, 2] = tt_cum[:, 2]*t_scale[2]
+    t_scale = [
+        (X.shape[0] - 1) / tt_cum[-1, 0],
+        (X.shape[0] - 1) / tt_cum[-1, 1],
+        (X.shape[0] - 1) / tt_cum[-1, 2],
+    ]
+    tt_cum[:, 0] = tt_cum[:, 0] * t_scale[0]
+    tt_cum[:, 1] = tt_cum[:, 1] * t_scale[1]
+    tt_cum[:, 2] = tt_cum[:, 2] * t_scale[2]
     return tt_cum
 
 
 def GenerateRandomCurves(X, sigma=0.2, knot=4):
-    xx = (np.ones((X.shape[1], 1))*(np.arange(0, X.shape[0], (X.shape[0]-1)/(knot+1)))).transpose()
-    yy = np.random.normal(loc=1.0, scale=sigma, size=(knot+2, X.shape[1]))
+    xx = (
+        np.ones((X.shape[1], 1))
+        * (np.arange(0, X.shape[0], (X.shape[0] - 1) / (knot + 1)))
+    ).transpose()
+    yy = np.random.normal(loc=1.0, scale=sigma, size=(knot + 2, X.shape[1]))
     x_range = np.arange(X.shape[0])
     cs_x = CubicSpline(xx[:, 0], yy[:, 0])
     cs_y = CubicSpline(xx[:, 1], yy[:, 1])
@@ -194,4 +220,3 @@ def time_warp(sample, choice, sigma=0.2):
         sample = DA_TimeWarp(sample, sigma=sigma)
         sample = np.swapaxes(sample, 0, 1)
     return sample
-

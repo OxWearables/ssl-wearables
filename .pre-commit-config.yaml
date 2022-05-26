@@ -8,4 +8,5 @@ repos:
     rev: v1.2.3
     hooks:
     - id: flake8
+      args: ['--ignore=E203,W503']
       exclude: mtl.py
