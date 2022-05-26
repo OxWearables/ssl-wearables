@@ -1,11 +1,10 @@
-# Test on the model will work on various platforms
 name: model
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
