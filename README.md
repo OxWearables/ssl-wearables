@@ -21,8 +21,8 @@ x = np.random.rand(1, 3, 300)
 x = torch.FloatTensor(x)
 harnet10(x)
 ```
-This is an example of a five-class prediction using 10-second long windows. The 30-second long version will be made
-avaliable at a later date.
+This is an example of a five-class prediction using 10-second long windows. The 30-second-long version will be made
+available at a later date.
 
 
 ## Requirements
@@ -69,7 +69,7 @@ python mtl.py runtime.gpu=0 data.data_root=PATH2DATA runtime.is_epoch_data=True 
 ```
 It would then save the model trained into `PATH2DATA/logs/models`. 
 
-## Fine-tunining
+## Fine-tuning
 You will need to specify your benchmark datasets using the config files under `conf/data` directory. 
 All the specified models will be evaluated sequentially.
 ```bash
@@ -94,7 +94,7 @@ You can download pretrained models here:
 
 ## Results
 ### Human activity recognition benchmarks
-Our model achieves the following performance using ResNet (F1 score, SD):
+Our model achieves the following performance using ResNet (Mean F1 score &#177; SD):
 
 | Data   |   Trained from scratch | Fine-tune after ConV layers  | Fine-tune all layers | Improvement % |
 | ------------------ |---------------- | -------------- |---------------- |  --- |
@@ -107,27 +107,25 @@ Our model achieves the following performance using ResNet (F1 score, SD):
 |  ADL  |    .414 &#177; .179 | .645 &#177; .107 | .829 &#177; .101 |  100.0  |
 
 
-### Feature visualization using UMAP 
+### Feature visualisation using UMAP 
 
 Rowlands             |  WISDM
 :-------------------------:|:-------------------------:
 ![](plots/imgs/umap_rowlands.png)  |  ![](plots/imgs/umap_wisdm.png)
 
-Results tables and figures generation can be found in the `plots/*` folder.
+Result tables and figures generation can be found in the `plots/*` folder.
 
 ## Datasets
 All the data pre-processing is specified in the `data_parsing` folder. We have uploaded the processed dataset files for you to use.
-You can download them [here](https://zenodo.org/record/6574265#.YovCMi8w1qs). If you wish to process those datasets yourself, you could use `data_parsing/make_*.py` to understand how we processed each
+You can download them [here](https://zenodo.org/record/6574265#.YovCMi8w1qs). If you wish to process those datasets yourself, you can use `data_parsing/make_*.py` to understand how we processed each
 dataset in details.
 
 
 ## Contributing
 
-Our self-supervised model aims to help everyone build state-of-the-art human activity recognition models with 
-minimal effort possible. If you have suggestions for improvement or a bug report, don't hesitate to open an issue now. If you are keen
-to make a pull request, we will aim to reply to your request within 2 days. We expect our model to be used
-by people from diverse backgrounds, so please do let us know if we can make it easier for people to use. We plan
-to maintain this project regularly but do excuse us for a late response due to other commitments.
+Our self-supervised model can help build state-of-the-art human activity recognition models with minimal effort. 
+We expect our model to be used by people from diverse backgrounds, so please do let us know if we can make this 
+repo easier to use. Pull requests are very welcome. Please open an issue if you have suggested improvements or a bug report. We plan to maintain this project regularly but do excuse us for a late response due to other commitments.
 
 ## Reference 
 If you use our work, please cite: 
@@ -142,6 +140,8 @@ If you use our work, please cite:
 ```
 
 ## License
-See [license](LICENSE.md) for non-academic use.
+This software is intended for use by academics carrying out research and not for use by consumers of 
+commercial business, see [academic use licence file](LICENSE.md). If you are interested in using this software commercially, 
+please contact Oxford University Innovation Limited to negotiate a licence. Contact details are enquiries@innovation.ox.ac.uk
 
 
