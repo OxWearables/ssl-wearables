@@ -71,7 +71,7 @@ harnet10(x)
 
 
 
-### Self-supervised pre-training out-performs supervised pre-trianing
+### Self-supervised pre-training out-performs supervised pre-training
 ![alt text](assets/transfer.png "limited_subject")
 
 
@@ -105,9 +105,9 @@ harnet10(x)
 ```
 
 
-## Acknowedlgement
+## Acknowledgement
 
 
-> We would like to thank all the helpful discussions and feedback we recevied from Aiden Acquah, Gert Mertes, Henrique Aguiar, Andres Tamm, and Korsuk Sirinukunwattana.
+> We would like to thank all the helpful discussions and feedback we recevied from Aidan Acquah, Gert Mertes, Henrique Aguiar, Andres Tamm, and Korsuk Sirinukunwattana.
 >This research has been conducted using the UK Biobank Resource under Application Number 59070. This work is supported by: Novo Nordisk (HY, AD); the Wellcome Trust [223100/Z/21/Z] (AD); GlaxoSmithKline (AC, DC); the British Heart Foundation Centre of Research Excellence [RE/18/3/34214] (AD); the National Institute for Health Research (NIHR) Oxford Biomedical Research Centre (AD, DC); and Health Data Research UK, an initiative funded by UK Research and Innovation, Department of Health and Social Care (England) and the devolved administrations, and leading medical research charities. It is also supported by the UK’s Engineering and Physical Sciences Research Council (EPSRC) with grants EP/S001530/1 (the MOA project) and EP/R018677/1 (the OPERA project); and the European Research Council (ERC) via the REDIAL project (Grant Agreement ID: 805194), and industrial funding from Samsung AI.
 > We would also like to thank Alex Rowlands and Mike Catt, who kindly shared their activity dataset with us. Their project was funded by a grant from Unilever Discover to the School of Sports and Health Sciences, University of Exeter.
