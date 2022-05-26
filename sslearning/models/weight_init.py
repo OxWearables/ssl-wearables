@@ -1,12 +1,13 @@
 import torch.nn as nn
 import torch.nn.init as init
 
+
 def weight_init(m):
-    '''
+    """
     Usage:
         model = Model()
         model.apply(weight_init)
-    '''
+    """
     if isinstance(m, nn.Conv1d):
         init.normal_(m.weight.data)
         if m.bias is not None:
@@ -69,5 +70,5 @@ def weight_init(m):
                 init.normal_(param.data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
