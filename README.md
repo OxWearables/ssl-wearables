@@ -27,7 +27,7 @@ available at a later date.
 
 ## Requirements
 If you would like to develop the model for your own use, you need to follow the instructions below:
-### Installation 
+### Installation
 ```bash
 conda create -n ssl_env python=3.7
 conda activate ssl_env
@@ -36,18 +36,18 @@ pip install -r req.txt
 
 
 ### Directory structure
-To run the models, the data directory will have to be structured in a similar fashion as below. The `ADL` dataset has been included 
-as an example. 
+To run the models, the data directory will have to be structured in a similar fashion as below. The `ADL` dataset has been included
+as an example.
 ```shell
-- data: 
-  |_ downstream 
+- data:
+  |_ downstream
     |_oppo
       |_ X.npy
       |_ Y.npy
       |_ pid.npy
     |_pamap2
     ...
-    
+
   |_ ssl # ignore the ssl folder if you don't wish to pre-train using your own dataset
     |_ ssl_capture_24
       |_data
@@ -65,15 +65,15 @@ as an example.
 ### Self-supervised learning
 First you will want to download the processed capture24 dataset on your local machine. Self-supervised training on capture-24 for all of the three tasks can be run using:
 ```bash
-python mtl.py runtime.gpu=0 data.data_root=PATH2DATA runtime.is_epoch_data=True data=ssl_capture_24 task=all task.scale=false augmentation=all   model=resnet data.batch_subject_num=5 dataloader=ten_sec 
+python mtl.py runtime.gpu=0 data.data_root=PATH2DATA runtime.is_epoch_data=True data=ssl_capture_24 task=all task.scale=false augmentation=all   model=resnet data.batch_subject_num=5 dataloader=ten_sec
 ```
-It would then save the model trained into `PATH2DATA/logs/models`. 
+It would then save the model trained into `PATH2DATA/logs/models`.
 
 ## Fine-tuning
-You will need to specify your benchmark datasets using the config files under `conf/data` directory. 
+You will need to specify your benchmark datasets using the config files under `conf/data` directory.
 All the specified models will be evaluated sequentially.
 ```bash
-python downstream_task_evaluation.py data=custom_10s report_root=PATH2REPORT evaluation.flip_net_path=PATH2WEIGHT data.data_root=PATH2DATA is_dist=True evaluation=all 
+python downstream_task_evaluation.py data=custom_10s report_root=PATH2REPORT evaluation.flip_net_path=PATH2WEIGHT data.data_root=PATH2DATA is_dist=True evaluation=all
 ```
 Change the path of the full model to obtain different results. An example `ADL` dataset has already been included in the
 `data` folder.  The weight path is the path to the model file in `model_check_point`. `report_root` can be
@@ -82,14 +82,14 @@ anything where on your machine.
 ## Pre-trained Models
 You can download pretrained models here:
 
-| Dataset   |   Subject count | Arrow of Time | Permutation | Time-warp |  Link | 
-| ------------------ |---------------- | -------------- |---------------- |  --- | ---| 
-|  UK-Biobank   |  100k | ☑️  |  ☑️  |   ☑️  | [Download](https://drive.google.com/file/d/1Pm4oGPCM4gKLZEHjv8dAuzhOSLdTzcRN/view?usp=sharing) | 
-|  UK-Biobank   |  1k | ❌  | ☑️ |     ☑️️  | [Download](https://drive.google.com/file/d/1HYAIdKB-uAlSU0wvj8tEaflRvyVlUnZ9/view?usp=sharing) | 
-|  UK-Biobank   |  1k |  ☑️   |❌ |  ☑️  | [Download](https://drive.google.com/file/d/1aG8BqUTCnDGqKFZbzd19zr8GP1qMs52s/view?usp=sharing) | 
-|  UK-Biobank   |  1k |   ☑️ | ☑️  |   ❌  | [Download](https://drive.google.com/file/d/1wYQM9GviQSbaTMhmg5GCNDpH2RTscEGj/view?usp=sharing) | 
-|  Capture-24   |  ~150 | ☑️  |  ☑️  |   ☑️  | [Download](https://drive.google.com/file/d/1a3HjANe8WM8cLJ4alDL-L6qKvV2B4JKt/view?usp=sharing) | 
-|  Rowlands   |  ~10 | ☑️  |  ☑️  |   ☑️  | [Download](https://drive.google.com/file/d/1VMPpvL4A0oiOUdzMqkNNNISkBX-keOQS/view?usp=sharing) | 
+| Dataset   |   Subject count | Arrow of Time | Permutation | Time-warp |  Link |
+| ------------------ |---------------- | -------------- |---------------- |  --- | ---|
+|  UK-Biobank   |  100k | ☑️  |  ☑️  |   ☑️  | [Download](https://wearables-files.ndph.ox.ac.uk/files/ssl/mtl_best.mdl) |
+|  UK-Biobank   |  1k | ❌  | ☑️ |     ☑️️  | [Download](https://wearables-files.ndph.ox.ac.uk/files/ssl/aFalse_pTrue_tTrue.mdl) |
+|  UK-Biobank   |  1k |  ☑️   |❌ |  ☑️  | [Download](https://wearables-files.ndph.ox.ac.uk/files/ssl/aTrue_pFalse_tTrue.mdl) |
+|  UK-Biobank   |  1k |   ☑️ | ☑️  |   ❌  | [Download](https://wearables-files.ndph.ox.ac.uk/files/ssl/aTrue_pTrue_tFalse.mdl) |
+|  Capture-24   |  ~150 | ☑️  |  ☑️  |   ☑️  | [Download](https://wearables-files.ndph.ox.ac.uk/files/ssl/ssl_capture24.mdl) |
+|  Rowlands   |  ~10 | ☑️  |  ☑️  |   ☑️  | [Download](https://wearables-files.ndph.ox.ac.uk/files/ssl/ssl_rowlands.mdl) |
 
 
 ## Results
@@ -107,7 +107,7 @@ Our model achieves the following performance using ResNet (Mean F1 score &#177; 
 |  ADL  |    .414 &#177; .179 | .645 &#177; .107 | .829 &#177; .101 |  100.0  |
 
 
-### Feature visualisation using UMAP 
+### Feature visualisation using UMAP
 
 Rowlands             |  WISDM
 :-------------------------:|:-------------------------:
@@ -123,12 +123,12 @@ dataset in details.
 
 ## Contributing
 
-Our self-supervised model can help build state-of-the-art human activity recognition models with minimal effort. 
-We expect our model to be used by people from diverse backgrounds, so please do let us know if we can make this 
+Our self-supervised model can help build state-of-the-art human activity recognition models with minimal effort.
+We expect our model to be used by people from diverse backgrounds, so please do let us know if we can make this
 repo easier to use. Pull requests are very welcome. Please open an issue if you have suggested improvements or a bug report. We plan to maintain this project regularly but do excuse us for a late response due to other commitments.
 
-## Reference 
-If you use our work, please cite: 
+## Reference
+If you use our work, please cite:
 
 ```tex
 @inproceedings{xxxx,
@@ -140,8 +140,8 @@ If you use our work, please cite:
 ```
 
 ## License
-This software is intended for use by academics carrying out research and not for use by consumers of 
-commercial business, see [academic use licence file](LICENSE.md). If you are interested in using this software commercially, 
+This software is intended for use by academics carrying out research and not for use by consumers of
+commercial business, see [academic use licence file](LICENSE.md). If you are interested in using this software commercially,
 please contact Oxford University Innovation Limited to negotiate a licence. Contact details are enquiries@innovation.ox.ac.uk
 
 
