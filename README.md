@@ -20,10 +20,14 @@ harnet10 = torch.hub.load(repo, 'harnet10', class_num=5, pretrained=True)
 x = np.random.rand(1, 3, 300)
 x = torch.FloatTensor(x)
 harnet10(x)
-```
-This is an example of a five-class prediction using 10-second long windows. The 30-second-long version will be made
-available at a later date.
 
+harnet30 = torch.hub.load(repo, 'harnet30', class_num=5, pretrained=True)
+x = np.random.rand(1, 3, 900)
+x = torch.FloatTensor(x)
+harnet30(x)
+```
+This is an example of a five-class prediction for both 10-second and 30-second long examples.
+The assumed sampling rate is 30Hz.
 
 ## Requirements
 If you would like to develop the model for your own use, you need to follow the instructions below:

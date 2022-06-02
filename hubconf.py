@@ -82,3 +82,47 @@ def harnet10(pretrained=False, my_device="cpu", class_num=2, **kwargs):
         )
 
     return model
+
+
+def harnet30(pretrained=False, my_device="cpu", class_num=2, **kwargs):
+    """
+    harnet10 model
+    pretrained (bool): kwargs, load pretrained weights into the model
+
+    Input:
+
+    X is of size: N x 3 x 300. N is the number of examples.
+    3 is the xyz channel. 300 consists of
+    a 10 second recording with 30hz.
+
+    Output:
+    my_device (str)
+    class_num (int): the number of classes to predict
+
+    Example:
+    repo = 'OxWearables/ssl-wearables'
+    model = torch.hub.load(repo, 'harnet10',
+                           pretrained=True)
+    x = np.random.rand(1, 3, 300)
+    x = torch.FloatTensor(x)
+    model(x)
+
+    """
+    # Call the model, load pretrained weights
+    model = Resnet(
+        output_size=class_num,
+        is_eva=True,
+        epoch_len=30,
+        resnet_version=1,
+    )
+
+    if pretrained:
+        dirname = os.path.dirname(__file__)
+        checkpoint = os.path.join(
+            dirname, "", "model_check_point", "mtl_30_best.mdl"
+        )
+        load_weights(
+            checkpoint, model, my_device, is_dist=True, name_start_idx=1
+        )
+
+    return model
