@@ -129,7 +129,7 @@ class LRPCompositeSSL(object):
                         if b<4:
                             setattr(layer, 'rule', GammaRule());rule='LRP-y'
                         elif (4 <= b <= 15): 
-                            setattr(layer, 'rule', Alpha1_Beta0_Rule());rule='LRP-AB'
+                            setattr(layer, 'rule', EpsilonRule(1e-3));rule='LRP-AB'
                         elif b >= 15:
                             setattr(layer, 'rule', EpsilonRule(epsilon=1e-9));rule='LRP-e'
         
