@@ -135,11 +135,13 @@ repo easier to use. Pull requests are very welcome. Please open an issue if you 
 If you use our work, please cite:
 
 ```tex
-@inproceedings{xxxx,
-       author = {xxx},
-       title = {xxx},
-       booktitle = {xxx},
-       year = {2022},
+@misc{yuan2022selfsupervised,
+      title={Self-supervised Learning for Human Activity Recognition Using 700,000 Person-days of Wearable Data}, 
+      author={Hang Yuan and Shing Chan and Andrew P. Creagh and Catherine Tong and David A. Clifton and Aiden Doherty},
+      year={2022},
+      eprint={2206.02909},
+      archivePrefix={arXiv},
+      primaryClass={eess.SP}
 }
 ```
 
