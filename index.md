@@ -93,15 +93,14 @@ harnet10(x)
 ## Bibliography
 
 ```tex
-@article{doherty2017large,
-    title={Large scale population assessment of physical activity using wrist worn accelerometers: the UK biobank study},
-    author={Doherty, Aiden and Jackson, Dan and Hammerla, Nils and Pl{\"o}tz, Thomas and Olivier, Patrick and Granat, Malcolm H and White, Tom and Van Hees, Vincent T and Trenell, Michael I and Owen, Christoper G and others},
-    journal={PloS one},
-    volume={12},
-    number={2},
-    pages={e0169649},
-    year={2017},
-    publisher={Public Library of Science San Francisco, CA USA}}
+@misc{yuan2022selfsupervised,
+      title={Self-supervised Learning for Human Activity Recognition Using 700,000 Person-days of Wearable Data}, 
+      author={Hang Yuan and Shing Chan and Andrew P. Creagh and Catherine Tong and David A. Clifton and Aiden Doherty},
+      year={2022},
+      eprint={2206.02909},
+      archivePrefix={arXiv},
+      primaryClass={eess.SP}
+}
 ```
 
 
