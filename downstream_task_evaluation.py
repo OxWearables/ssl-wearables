@@ -401,6 +401,7 @@ def evaluate_mlp(X_feats, y, cfg, my_device, logger, groups=None):
     results = []
     fold_id = 0
     for train_idxs, test_idxs in folds:
+        fold_id += 1
         result = train_test_mlp(
             train_idxs,
             test_idxs,
