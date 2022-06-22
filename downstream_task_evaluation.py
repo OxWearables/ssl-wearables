@@ -137,7 +137,7 @@ def setup_data(train_idxs, test_idxs, X_feats, Y, groups, cfg, fold_id):
         )
 
     test_id_path = os.path.join(
-        "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "train_pid.npy"
+        "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "test_pid.npy"
     )
     np.save(test_id_path, test_idxs)
 
@@ -160,7 +160,7 @@ def setup_data(train_idxs, test_idxs, X_feats, Y, groups, cfg, fold_id):
     else:
         # We further divide up train into 70/10 train/val split
         X_train, X_val, Y_train, Y_val = train_val_split(
-            tmp_X_train, tmp_Y_train, group_train, fold_id
+            tmp_X_train, tmp_Y_train, group_train, fold_id=fold_id
         )
 
     my_transform = None
