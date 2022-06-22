@@ -55,8 +55,6 @@ def train_val_split(X, Y, group, val_size=0.125, fold_id=0):
         "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "val_pid.npy"
     )
 
-    pathlib.Path(train_id_path).mkdir(parents=True, exist_ok=True)
-
     np.save(train_id_path, train_idx)
     np.save(val_id_path, val_idx)
 
@@ -141,7 +139,6 @@ def setup_data(train_idxs, test_idxs, X_feats, Y, groups, cfg, fold_id):
     test_id_path = os.path.join(
         "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "train_pid.npy"
     )
-    pathlib.Path(test_id_path).mkdir(parents=True, exist_ok=True)
     np.save(test_id_path, test_idxs)
 
     # When changing the number of training data, we
@@ -366,7 +363,6 @@ def train_test_mlp(
         str(fold_id),
         "cnn_pretrained_" + str(cfg.evaluation.freeze_weight) + ".mdl",
     )
-    pathlib.Path(cv_model_path).mkdir(parents=True, exist_ok=True)
     shutil.copy2(cfg.model_path, cv_model_path)
 
     y_test, y_test_pred, pid_test = mlp_predict(
@@ -462,8 +458,6 @@ def train_test_rf(
     rf_path = os.path.join(
         "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "rf.joblib"
     )
-    pathlib.Path(rf_path).mkdir(parents=True, exist_ok=True)
-
     joblib.dump(model, rf_path)
 
     results = []
