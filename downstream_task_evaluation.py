@@ -31,6 +31,8 @@ import logging
 from datetime import datetime
 import collections
 from hydra.utils import get_original_cwd
+import shutil
+import joblib
 
 """
 python downstream_task_evaluation.py -m data=rowlands_10s,oppo_10s
@@ -39,12 +41,25 @@ is_dist=false gpu=0 model=resnet evaluation=mtl_1k_ft evaluation.task_name=aot
 """
 
 
-def train_val_split(X, Y, group, val_size=0.125):
+def train_val_split(X, Y, group, val_size=0.125, fold_id=0):
     num_split = 1
     folds = GroupShuffleSplit(
         num_split, test_size=val_size, random_state=41
     ).split(X, Y, groups=group)
     train_idx, val_idx = next(folds)
+
+    train_id_path = os.path.join(
+        "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "train_pid.npy"
+    )
+    val_id_path = os.path.join(
+        "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "val_pid.npy"
+    )
+
+    pathlib.Path(train_id_path).mkdir(parents=True, exist_ok=True)
+
+    np.save(train_id_path, train_idx)
+    np.save(val_id_path, val_idx)
+
     return X[train_idx], X[val_idx], Y[train_idx], Y[val_idx]
 
 
@@ -112,7 +127,7 @@ def get_class_weights(y):
     return weights
 
 
-def setup_data(train_idxs, test_idxs, X_feats, Y, groups, cfg):
+def setup_data(train_idxs, test_idxs, X_feats, Y, groups, cfg, fold_id):
     tmp_X_train, X_test = X_feats[train_idxs], X_feats[test_idxs]
     tmp_Y_train, Y_test = Y[train_idxs], Y[test_idxs]
     group_train, group_test = groups[train_idxs], groups[test_idxs]
@@ -122,6 +137,12 @@ def setup_data(train_idxs, test_idxs, X_feats, Y, groups, cfg):
         tmp_X_train, tmp_Y_train, group_train = get_data_with_subject_count(
             cfg.data.subject_count, tmp_X_train, tmp_Y_train, group_train
         )
+
+    test_id_path = os.path.join(
+        "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "train_pid.npy"
+    )
+    pathlib.Path(test_id_path).mkdir(parents=True, exist_ok=True)
+    np.save(test_id_path, test_idxs)
 
     # When changing the number of training data, we
     # will keep the test data fixed
@@ -142,7 +163,7 @@ def setup_data(train_idxs, test_idxs, X_feats, Y, groups, cfg):
     else:
         # We further divide up train into 70/10 train/val split
         X_train, X_val, Y_train, Y_val = train_val_split(
-            tmp_X_train, tmp_Y_train, group_train
+            tmp_X_train, tmp_Y_train, group_train, fold_id
         )
 
     my_transform = None
@@ -326,27 +347,26 @@ def get_train_test_split(cfg, X_feats, y, groups):
 
 
 def train_test_mlp(
-    train_idxs,
-    test_idxs,
-    X_feats,
-    y,
-    groups,
-    cfg,
-    my_device,
-    labels=None,
-    encoder=None,
+    train_idxs, test_idxs, X_feats, y, groups, cfg, my_device, fold_id=0
 ):
     model = setup_model(cfg, my_device)
     if cfg.is_verbose:
         print(model)
     train_loader, val_loader, test_loader, weights = setup_data(
-        train_idxs, test_idxs, X_feats, y, groups, cfg
+        train_idxs, test_idxs, X_feats, y, groups, cfg, fold_id
     )
     train_mlp(model, train_loader, val_loader, cfg, my_device, weights)
 
     model = init_model(cfg, my_device)
 
     model.load_state_dict(torch.load(cfg.model_path))
+
+    cv_model_path = os.path.join(
+        "/data/UKBB/SSL/ssl_cv_models",
+        str(fold_id),
+        "cnn_pretrained_" + str(cfg.evaluation.freeze_weight) + ".mdl",
+    )
+    shutil.copy2(cfg.model_path, cv_model_path)
 
     y_test, y_test_pred, pid_test = mlp_predict(
         model, test_loader, my_device, cfg
@@ -369,11 +389,8 @@ def evaluate_mlp(X_feats, y, cfg, my_device, logger, groups=None):
     """Train a random forest with X_feats and Y.
     Report a variety of performance metrics based on multiple runs."""
 
-    le = None
-    labels = None
     if cfg.data.task_type == "classify":
         le = preprocessing.LabelEncoder()
-        labels = np.unique(y)
         le.fit(y)
         y = le.transform(y)
     else:
@@ -385,6 +402,7 @@ def evaluate_mlp(X_feats, y, cfg, my_device, logger, groups=None):
     folds = get_train_test_split(cfg, X_feats, y, groups)
 
     results = []
+    fold_id = 0
     for train_idxs, test_idxs in folds:
         result = train_test_mlp(
             train_idxs,
@@ -394,8 +412,7 @@ def evaluate_mlp(X_feats, y, cfg, my_device, logger, groups=None):
             groups,
             cfg,
             my_device,
-            labels=labels,
-            encoder=le,
+            fold_id=fold_id,
         )
         results.extend(result)
 
@@ -404,7 +421,14 @@ def evaluate_mlp(X_feats, y, cfg, my_device, logger, groups=None):
 
 
 def train_test_rf(
-    train_idxs, test_idxs, X_feats, Y, cfg, groups, task_type="classify"
+    train_idxs,
+    test_idxs,
+    X_feats,
+    Y,
+    cfg,
+    groups,
+    task_type="classify",
+    fold_id=0,
 ):
     X_train, X_test = X_feats[train_idxs], X_feats[test_idxs]
     Y_train, Y_test = Y[train_idxs], Y[test_idxs]
@@ -434,6 +458,11 @@ def train_test_rf(
     model.fit(X_train, Y_train)
     Y_test_pred = model.predict(X_test)
 
+    rf_path = os.path.join(
+        "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "rf.joblib"
+    )
+    joblib.dump(model, rf_path)
+
     results = []
     for current_pid in np.unique(group_test):
         subject_filter = group_test == current_pid
@@ -459,9 +488,9 @@ def evaluate_feats(X_feats, Y, cfg, logger, groups=None, task_type="classify"):
     print("loading done")
     results = Parallel(n_jobs=1)(
         delayed(train_test_rf)(
-            train_idxs, test_idxs, X_feats, Y, cfg, groups, task_type
+            train_idxs, test_idxs, X_feats, Y, cfg, groups, task_type, fold_idx
         )
-        for train_idxs, test_idxs in folds
+        for fold_idx, (train_idxs, test_idxs) in enumerate(folds)
     )
     results = np.array(results)
 
