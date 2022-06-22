@@ -366,6 +366,7 @@ def train_test_mlp(
         str(fold_id),
         "cnn_pretrained_" + str(cfg.evaluation.freeze_weight) + ".mdl",
     )
+    pathlib.Path(cv_model_path).mkdir(parents=True, exist_ok=True)
     shutil.copy2(cfg.model_path, cv_model_path)
 
     y_test, y_test_pred, pid_test = mlp_predict(
@@ -461,6 +462,8 @@ def train_test_rf(
     rf_path = os.path.join(
         "/data/UKBB/SSL/ssl_cv_models", str(fold_id), "rf.joblib"
     )
+    pathlib.Path(rf_path).mkdir(parents=True, exist_ok=True)
+
     joblib.dump(model, rf_path)
 
     results = []
