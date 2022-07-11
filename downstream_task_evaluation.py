@@ -293,6 +293,10 @@ def init_model(cfg, my_device):
         model = SSLNET(
             output_size=cfg.data.output_size, flatten_size=1024
         )  # VGG
+
+    if cfg.multi_gpu:
+        model = nn.DataParallel(model, device_ids=cfg.gpu_ids)
+
     model.to(my_device, dtype=torch.float)
     return model
 
@@ -632,7 +636,12 @@ def load_weights(
             new_key = ".".join(para_names[name_start_idx:])
             pretrained_dict_v2[new_key] = pretrained_dict_v2.pop(key)
 
-    model_dict = model.state_dict()
+    if hasattr(model, 'module'):
+        model_dict = model.module.state_dict()
+        multi_gpu_ft = True
+    else:
+        model_dict = model.state_dict()
+        multi_gpu_ft = False
 
     # 1. filter out unnecessary keys such as the final linear layers
     #    we don't want linear layer weights either
@@ -646,7 +655,10 @@ def load_weights(
     model_dict.update(pretrained_dict)
 
     # 3. load the new state dict
-    model.load_state_dict(model_dict)
+    if multi_gpu_ft:
+        model.module.load_state_dict(model_dict)
+    else:
+        model.load_state_dict(model_dict)
     print("%d Weights loaded" % len(pretrained_dict))
 
 
@@ -688,6 +700,8 @@ def main(cfg):
     GPU = cfg.gpu
     if GPU != -1:
         my_device = "cuda:" + str(GPU)
+    elif cfg.multi_gpu is True:
+        my_device = "cuda:0"  # use the first GPU as master
     else:
         my_device = "cpu"
     # Expected shape of downstream X and Y

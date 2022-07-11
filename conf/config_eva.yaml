@@ -6,6 +6,8 @@ defaults:
   - dataloader: ten_sec
 
 gpu: -1
+gpu_ids: [0, 1, 2]  # gpus to use if multi_gpu==true
+multi_gpu: false
 num_split: 5
 augmentation: true
 model_path: /data/UKBB/tmp_mdl/
