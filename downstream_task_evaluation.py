@@ -308,9 +308,7 @@ def setup_model(cfg, my_device):
         load_weights(
             cfg.evaluation.flip_net_path,
             model,
-            my_device,
-            is_dist=cfg.is_dist,
-            name_start_idx=1,
+            my_device
         )
     if cfg.evaluation.freeze_weight:
         freeze_weights(model)
@@ -620,7 +618,7 @@ def get_data_with_subject_count(subject_count, X, y, pid):
 
 
 def load_weights(
-    weight_path, model, my_device, name_start_idx=2, is_dist=False
+    weight_path, model, my_device
 ):
     # only need to change weights name when
     # the model is trained in a distributed manner
@@ -630,11 +628,10 @@ def load_weights(
         pretrained_dict
     )  # v2 has the right para names
 
-    if is_dist:
-        for key in pretrained_dict:
-            para_names = key.split(".")
-            new_key = ".".join(para_names[name_start_idx:])
-            pretrained_dict_v2[new_key] = pretrained_dict_v2.pop(key)
+    # distributed pretraining can be inferred from the keys' module. prefix
+    if 'module.' in list(pretrained_dict_v2.keys())[0]:
+        # remove module. prefix from dict keys
+        pretrained_dict_v2 = {k.partition('module.')[2]: pretrained_dict_v2[k] for k in pretrained_dict_v2.keys()}
 
     if hasattr(model, 'module'):
         model_dict = model.module.state_dict()
