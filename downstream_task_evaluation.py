@@ -629,7 +629,8 @@ def load_weights(
     )  # v2 has the right para names
 
     # distributed pretraining can be inferred from the keys' module. prefix
-    if 'module.' in list(pretrained_dict_v2.keys())[0]:
+    head = next(iter(pretrained_dict_v2)).split('.')[0]  # get head of first key
+    if head == 'module':
         # remove module. prefix from dict keys
         pretrained_dict_v2 = {k.partition('module.')[2]: pretrained_dict_v2[k] for k in pretrained_dict_v2.keys()}
 
