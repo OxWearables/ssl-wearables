@@ -293,6 +293,10 @@ def init_model(cfg, my_device):
         model = SSLNET(
             output_size=cfg.data.output_size, flatten_size=1024
         )  # VGG
+
+    if cfg.multi_gpu:
+        model = nn.DataParallel(model, device_ids=cfg.gpu_ids)
+
     model.to(my_device, dtype=torch.float)
     return model
 
@@ -304,9 +308,7 @@ def setup_model(cfg, my_device):
         load_weights(
             cfg.evaluation.flip_net_path,
             model,
-            my_device,
-            is_dist=cfg.is_dist,
-            name_start_idx=1,
+            my_device
         )
     if cfg.evaluation.freeze_weight:
         freeze_weights(model)
@@ -616,7 +618,7 @@ def get_data_with_subject_count(subject_count, X, y, pid):
 
 
 def load_weights(
-    weight_path, model, my_device, name_start_idx=2, is_dist=False
+    weight_path, model, my_device
 ):
     # only need to change weights name when
     # the model is trained in a distributed manner
@@ -626,13 +628,18 @@ def load_weights(
         pretrained_dict
     )  # v2 has the right para names
 
-    if is_dist:
-        for key in pretrained_dict:
-            para_names = key.split(".")
-            new_key = ".".join(para_names[name_start_idx:])
-            pretrained_dict_v2[new_key] = pretrained_dict_v2.pop(key)
+    # distributed pretraining can be inferred from the keys' module. prefix
+    head = next(iter(pretrained_dict_v2)).split('.')[0]  # get head of first key
+    if head == 'module':
+        # remove module. prefix from dict keys
+        pretrained_dict_v2 = {k.partition('module.')[2]: pretrained_dict_v2[k] for k in pretrained_dict_v2.keys()}
 
-    model_dict = model.state_dict()
+    if hasattr(model, 'module'):
+        model_dict = model.module.state_dict()
+        multi_gpu_ft = True
+    else:
+        model_dict = model.state_dict()
+        multi_gpu_ft = False
 
     # 1. filter out unnecessary keys such as the final linear layers
     #    we don't want linear layer weights either
@@ -646,7 +653,10 @@ def load_weights(
     model_dict.update(pretrained_dict)
 
     # 3. load the new state dict
-    model.load_state_dict(model_dict)
+    if multi_gpu_ft:
+        model.module.load_state_dict(model_dict)
+    else:
+        model.load_state_dict(model_dict)
     print("%d Weights loaded" % len(pretrained_dict))
 
 
@@ -688,6 +698,8 @@ def main(cfg):
     GPU = cfg.gpu
     if GPU != -1:
         my_device = "cuda:" + str(GPU)
+    elif cfg.multi_gpu is True:
+        my_device = "cuda:0"  # use the first GPU as master
     else:
         my_device = "cpu"
     # Expected shape of downstream X and Y
