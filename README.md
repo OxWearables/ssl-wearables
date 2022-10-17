@@ -3,7 +3,7 @@
 This repository is the official implementation of [Self-supervised learning for Human Activity Recognition Using 700,000 Person-days of Wearable Data](https://arxiv.org/abs/2206.02909).
 
 ![alt text](plots/imgs/ssl_pretrain.png)
-![alt text](plots/imgs/ssl_finetune_capture24.png)
+![alt text](plots/imgs/ssl_finetune_capture24_eval.png)
 
 ## Use the pre-trained models
 Required:
