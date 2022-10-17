@@ -48,7 +48,7 @@ a later date.
 
 We used self-supervision to train a ResNet16 V2 with 1D convolution. We inverted (arrow of the time), permuted, and time-warped the accelerometer data.
 
-![alt text](assets/ssl_diagram.jpg "Overview")
+![alt text](assets/ssl_diagram.png "Overview")
 
 
 ## Using the pre-trained model
