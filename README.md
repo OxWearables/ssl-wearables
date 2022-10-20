@@ -2,8 +2,8 @@
 
 This repository is the official implementation of [Self-supervised learning for Human Activity Recognition Using 700,000 Person-days of Wearable Data](https://arxiv.org/abs/2206.02909).
 
-![alt text](plots/imgs/ssl_pretrain.png)
-![alt text](plots/imgs/ssl_finetune_capture24_eval.png)
+<img src="plots/imgs/SSL_pipeline.png" width="600" height="575"/><br>
+<b>Figure:</b> Overview of multi-task self-supervised learning (SSL) pipeline. 
 
 ## Use the pre-trained models
 Required:
