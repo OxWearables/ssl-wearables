@@ -69,6 +69,7 @@ def harnet5(pretrained=False, my_device="cpu", class_num=2, **kwargs):
     model = Resnet(
         output_size=class_num,
         is_eva=True,
+        epoch_len=5,
         resnet_version=1,
     )
 
