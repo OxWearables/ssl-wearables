@@ -670,14 +670,22 @@ class Resnet(nn.Module):
         # - downsampling filter order of 1
         # In the below, note that 3*3*5*5*4 = 900 (input size)
         if resnet_version == 1:
-            if epoch_len == 10:
+            if epoch_len == 5:
+                cgf = [
+                    (64, 5, 2, 5, 2, 2),
+                    (128, 5, 2, 5, 2, 2),
+                    (256, 5, 2, 5, 3, 1),
+                    (256, 5, 2, 5, 3, 1),
+                    (512, 5, 0, 5, 3, 1),
+                ]
+            elif epoch_len == 10:
                 cgf = [
                     (64, 5, 2, 5, 2, 2),
                     (128, 5, 2, 5, 2, 2),
                     (256, 5, 2, 5, 5, 1),
                     (512, 5, 2, 5, 5, 1),
                     (1024, 5, 0, 5, 3, 1),
-                ]  # ResNet16
+                ]
             else:
                 cgf = [
                     (64, 5, 2, 5, 3, 1),
@@ -685,7 +693,7 @@ class Resnet(nn.Module):
                     (256, 5, 2, 5, 5, 1),
                     (512, 5, 2, 5, 5, 1),
                     (1024, 5, 0, 5, 4, 0),
-                ]  # 30 sec
+                ]
         else:
             cgf = [
                 (64, 5, 2, 5, 3, 1),

@@ -41,6 +41,49 @@ def load_weights(
     print("%d Weights loaded" % len(pretrained_dict))
 
 
+def harnet5(pretrained=False, my_device="cpu", class_num=2, **kwargs):
+    """
+    harnet5 model
+    pretrained (bool): kwargs, load pretrained weights into the model
+
+    Input:
+
+    X is of size: N x 3 x 150. N is the number of examples.
+    3 is the xyz channel. 150 consists of
+    a 5-second recording with 30hz.
+
+    Output:
+    my_device (str)
+    class_num (int): the number of classes to predict
+
+    Example:
+    repo = 'OxWearables/ssl-wearables'
+    model = torch.hub.load(repo, 'harnet5',
+                           pretrained=True)
+    x = np.random.rand(1, 3, 150)
+    x = torch.FloatTensor(x)
+    model(x)
+
+    """
+    # Call the model, load pretrained weights
+    model = Resnet(
+        output_size=class_num,
+        is_eva=True,
+        resnet_version=1,
+    )
+
+    if pretrained:
+        dirname = os.path.dirname(__file__)
+        checkpoint = os.path.join(
+            dirname, "", "model_check_point", "mtl_5_best.mdl"
+        )
+        load_weights(
+            checkpoint, model, my_device, is_dist=True, name_start_idx=1
+        )
+
+    return model
+
+
 def harnet10(pretrained=False, my_device="cpu", class_num=2, **kwargs):
     """
     harnet10 model
@@ -50,7 +93,7 @@ def harnet10(pretrained=False, my_device="cpu", class_num=2, **kwargs):
 
     X is of size: N x 3 x 300. N is the number of examples.
     3 is the xyz channel. 300 consists of
-    a 10 second recording with 30hz.
+    a 10-second recording with 30hz.
 
     Output:
     my_device (str)
@@ -91,9 +134,9 @@ def harnet30(pretrained=False, my_device="cpu", class_num=2, **kwargs):
 
     Input:
 
-    X is of size: N x 3 x 300. N is the number of examples.
-    3 is the xyz channel. 300 consists of
-    a 10 second recording with 30hz.
+    X is of size: N x 3 x 900. N is the number of examples.
+    3 is the xyz channel. 900 consists of
+    a 30-second recording with 30hz.
 
     Output:
     my_device (str)
@@ -101,9 +144,9 @@ def harnet30(pretrained=False, my_device="cpu", class_num=2, **kwargs):
 
     Example:
     repo = 'OxWearables/ssl-wearables'
-    model = torch.hub.load(repo, 'harnet10',
+    model = torch.hub.load(repo, 'harnet30',
                            pretrained=True)
-    x = np.random.rand(1, 3, 300)
+    x = np.random.rand(1, 3, 900)
     x = torch.FloatTensor(x)
     model(x)
 
