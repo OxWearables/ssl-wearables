@@ -31,7 +31,10 @@ x = torch.FloatTensor(x)
 harnet30(x)
 ```
 This is an example of a five-class prediction for both 10-second and 30-second long examples.
-The assumed sampling rate is 30Hz.
+The assumed sampling rate is 30Hz. 
+
+The first part of these models is a `feature_extractor`, pre-trained using self-supervised learning. The second part is a `classifier` that is not trained at all. In order to use this model, you thus have to train the `classifier` part on a downstream task (for instance, train it for classification on any public activity recognition dataset). You should adapt the parameter `class_num` to the number of classes that you wish your final model to able to distinguish.
+
 
 ## Requirements
 If you would like to develop the model for your own use, you need to follow the instructions below:
