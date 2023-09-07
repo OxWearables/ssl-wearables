@@ -10,6 +10,8 @@ tramp
 .\#*
 runs/
 
+# data files
+data/*
 
 # intermediate files
 *.log
@@ -69,3 +71,6 @@ multirun
 
 # tmp files
 tmp
+
+# env file
+.env
