@@ -107,6 +107,3 @@ yarl==1.6.2
 zipp==3.4.0
 pre-commit
 tqdm
-synapseclient
-actipy
-python-dotenv
