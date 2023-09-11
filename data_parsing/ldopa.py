@@ -3,7 +3,6 @@ import pandas as pd
 from tqdm.auto import tqdm
 from datetime import datetime
 from scipy import constants
-from glob import glob
 from joblib import Parallel, delayed
 import numpy as np
 import warnings
@@ -13,7 +12,6 @@ from scipy.interpolate import interp1d
 from pathlib import Path
 from shutil import rmtree, copyfile
 from glob import glob
-import urllib.request as urllib
 import synapseclient
 import synapseutils
 from dotenv import load_dotenv, find_dotenv
@@ -40,6 +38,7 @@ LDOPA_DOWNLOADS = [
     ["HomeTasks", "syn20681035"],
 ]
 
+
 def load_environment_vars(env_strings=[]):
     load_dotenv(find_dotenv())
     missing_envs = []
@@ -60,8 +59,10 @@ def load_environment_vars(env_strings=[]):
 
     return tuple(env_values)
 
-USERNAME, APIKEY = load_environment_vars(["SYNAPSE_USERNAME", "SYNAPSE_APIKEY"])
 
+USERNAME, APIKEY = load_environment_vars(
+    ["SYNAPSE_USERNAME", "SYNAPSE_APIKEY"]
+)
 
 
 def check_files_exist(dir, files):
@@ -70,7 +71,9 @@ def check_files_exist(dir, files):
 
 def get_first_file(dataFolder, folderName):
     return os.path.join(
-        dataFolder, folderName, os.listdir(os.path.join(dataFolder, folderName))[0]
+        dataFolder,
+        folderName,
+        os.listdir(os.path.join(dataFolder, folderName))[0],
     )
 
 
@@ -107,7 +110,9 @@ def build_metadata(datadir=RAW_DIR, processeddir=PROCESSED_DIR):
 
 
 def build_acc_data(datadir=RAW_DIR, processeddir=PROCESSED_DIR, n_jobs=N_JOBS):
-    subjects = build_task_reference_file(datadir, processeddir)["subject_id"].unique()
+    subjects = build_task_reference_file(datadir, processeddir)[
+        "subject_id"
+    ].unique()
 
     outdir = os.path.join(processeddir, "acc_data")
     os.makedirs(outdir, exist_ok=True)
@@ -122,7 +127,9 @@ def build_acc_data(datadir=RAW_DIR, processeddir=PROCESSED_DIR, n_jobs=N_JOBS):
         print("Acceleration data already compiled...\n")
 
 
-def build_task_reference_file(datadir=RAW_DIR, outdir=PROCESSED_DIR, overwrite=False):
+def build_task_reference_file(
+    datadir=RAW_DIR, outdir=PROCESSED_DIR, overwrite=False
+):
     outFile = os.path.join(outdir, "TaskReferenceFile.csv")
 
     if os.path.exists(outFile) and not overwrite:
@@ -149,7 +156,13 @@ def build_task_reference_file(datadir=RAW_DIR, outdir=PROCESSED_DIR, overwrite=F
             date_parser=parse_datetime_from_timestamp,
         )
         taskScores = pd.concat([taskScore1, taskScore2])[
-            ["subject_id", "visit", "task_code", "timestamp_start", "timestamp_end"]
+            [
+                "subject_id",
+                "visit",
+                "task_code",
+                "timestamp_start",
+                "timestamp_end",
+            ]
         ]
         visit_to_day = {1: 1, 2: 4}
 
@@ -172,7 +185,9 @@ def build_task_reference_file(datadir=RAW_DIR, outdir=PROCESSED_DIR, overwrite=F
         ]
 
         taskRefFile = (
-            pd.concat([taskScores, homeTasks]).drop_duplicates().reset_index(drop=True)
+            pd.concat([taskScores, homeTasks])
+            .drop_duplicates()
+            .reset_index(drop=True)
         )
 
         taskRefFile.to_csv(outFile)
@@ -216,7 +231,10 @@ def build_participant_acc_data(subject, datadir, outdir):
 
 def build_patient_file_path(dataFolder, device, subject_id, index):
     return os.path.join(
-        dataFolder, device, get_patient_folder(subject_id), f"rawdata_day{index}.txt"
+        dataFolder,
+        device,
+        get_patient_folder(subject_id),
+        f"rawdata_day{index}.txt",
     )
 
 
@@ -230,7 +248,9 @@ def get_patient_folder(subject_id):
         raise AssertionError("Invalid subject id")
 
 
-def label_acc_data(label, datadir=RAW_DIR, processeddir=PROCESSED_DIR, n_jobs=N_JOBS):
+def label_acc_data(
+    label, datadir=RAW_DIR, processeddir=PROCESSED_DIR, n_jobs=N_JOBS
+):
     taskRefFile = build_task_reference_file(datadir, processeddir)
     subjects = taskRefFile["subject_id"].unique()
 
@@ -256,11 +276,15 @@ def build_task_dictionary(datadir=RAW_DIR, outdir=PROCESSED_DIR):
     processedDictionaryPath = os.path.join(outdir, "TaskDictionary.csv")
 
     if os.path.exists(processedDictionaryPath):
-        taskDictionary = pd.read_csv(processedDictionaryPath, index_col="task_code")
+        taskDictionary = pd.read_csv(
+            processedDictionaryPath, index_col="task_code"
+        )
     else:
         os.makedirs(os.path.dirname(outdir), exist_ok=True)
 
-        taskDictionary = pd.read_csv(os.path.join(datadir, "TaskCodeDictionary.csv"))
+        taskDictionary = pd.read_csv(
+            os.path.join(datadir, "TaskCodeDictionary.csv")
+        )
         taskDictionary["is-walking"] = taskDictionary["description"].apply(
             is_walking_given_description
         )
@@ -276,7 +300,10 @@ def build_task_dictionary(datadir=RAW_DIR, outdir=PROCESSED_DIR):
 def is_walking_given_description(description):
     return (
         "walking"
-        if (("WALKING" in description.upper()) or ("STAIRS" in description.upper()))
+        if (
+            ("WALKING" in description.upper())
+            or ("STAIRS" in description.upper())
+        )
         else "not-walking"
     )
 
@@ -324,10 +351,14 @@ def label_participant_data(
         accFile.to_csv(accFilePath)
 
     else:
-        print(f'Using saved subject labelled accelerometery data at "{accFilePath}".')
+        print(
+            f'Using saved subject labelled accelerometery data at "{accFilePath}".'
+        )
 
 
-def download_ldopa(datadir, annot_label="is-walking", overwrite=False, n_jobs=10):
+def download_ldopa(
+    datadir, annot_label="is-walking", overwrite=False, n_jobs=10
+):
     ldopa_datadir = os.path.join(datadir, "LDOPA_DATA")
     if overwrite or (
         len(glob(os.path.join(ldopa_datadir, "*.csv"))) < len(LDOPA_DOWNLOADS)
@@ -368,7 +399,9 @@ def download_ldopa(datadir, annot_label="is-walking", overwrite=False, n_jobs=10
     label_acc_data(annot_label, ldopa_datadir, processeddir, n_jobs)
 
 
-def load_data(datafile, sample_rate=100, index_col="timestamp", annot_type="int"):
+def load_data(
+    datafile, sample_rate=100, index_col="timestamp", annot_type="int"
+):
     if ".parquet" in datafile:
         data = pd.read_parquet(datafile)
         data.dropna(inplace=True)
@@ -390,7 +423,9 @@ def resize(x, length, axis=1):
     length_orig = x.shape[axis]
     t_orig = np.linspace(0, 1, length_orig, endpoint=True)
     t_new = np.linspace(0, 1, length, endpoint=True)
-    x = interp1d(t_orig, x, kind="linear", axis=axis, assume_sorted=True)(t_new)
+    x = interp1d(t_orig, x, kind="linear", axis=axis, assume_sorted=True)(
+        t_new
+    )
 
     return x
 
@@ -402,11 +437,13 @@ def make_windows(
     resample_rate=30,
     label_type="threshold",
     dropna=True,
-    verbose=False
+    verbose=False,
 ):
     X, Y, T, D = [], [], [], []
 
-    for t, w in tqdm(data.resample(f"{winsec}s", origin="start"), disable=not verbose):
+    for t, w in tqdm(
+        data.resample(f"{winsec}s", origin="start"), disable=not verbose
+    ):
         if len(w) < 1:
             continue
 
@@ -424,7 +461,9 @@ def make_windows(
 
         if label_type == "mode":
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", message="Unable to sort modes")
+                warnings.filterwarnings(
+                    "ignore", message="Unable to sort modes"
+                )
                 mode_label = annot.mode(dropna=False).iloc[0]
 
                 if mode_label == -1 or mode_label == "-1":
@@ -432,7 +471,11 @@ def make_windows(
 
                 y = mode_label
 
-                d = w["day"].mode(dropna=False).iloc[0] if "day" in w.columns else 1
+                d = (
+                    w["day"].mode(dropna=False).iloc[0]
+                    if "day" in w.columns
+                    else 1
+                )
 
         if dropna and pd.isna(y):
             continue
@@ -466,9 +509,7 @@ def is_good_window(x, sample_rate, winsec):
     return True
 
 
-def load_all_and_make_windows(
-    datadir, outdir, n_jobs, overwrite=False
-):
+def load_all_and_make_windows(datadir, outdir, n_jobs, overwrite=False):
     """Make windows from all available data, extract features and store locally"""
     if not overwrite and check_files_exist(
         outdir, ["X.npy", "Y.npy", "T.npy", "pid.npy", "day.npy"]
@@ -481,9 +522,7 @@ def load_all_and_make_windows(
     Xs, Ys, Ts, Ds, Ps = zip(
         *Parallel(n_jobs=n_jobs)(
             delayed(load_and_make_windows)(datafile)
-            for datafile in tqdm(
-                datafiles, desc=f"Load all and make windows"
-            )
+            for datafile in tqdm(datafiles, desc="Load all and make windows")
         )
     )
 
@@ -520,8 +559,8 @@ def load_and_make_windows(datafile):
 
 
 def filter_for_analysis(X, Y, T, D, P):
-    day_mask = (D==1) | (D==4)
-    label_mask = (Y != 'ram') & (Y != 'ftn')
+    day_mask = (D == 1) | (D == 4)
+    label_mask = (Y != "ram") & (Y != "ftn")
 
     X_out = X[day_mask & label_mask]
     Y_out = Y[day_mask & label_mask]
