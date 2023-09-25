@@ -503,8 +503,11 @@ def handcraft_features(xyz, sample_rate):
     feats["std"] = np.std(m)
     feats["range"] = np.ptp(m)
     feats["mad"] = stats.median_abs_deviation(m)
-    feats["kurt"] = stats.kurtosis(m)
-    feats["skew"] = stats.skew(m)
+    if feats['std'] > .01:
+        feats['skew'] = np.nan_to_num(stats.skew(m))
+        feats['kurt'] = np.nan_to_num(stats.kurtosis(m))
+    else:
+        feats['skew'] = feats['kurt'] = 0
     feats["enmomean"] = np.mean(np.abs(m - 1))
 
     # Spectrum using Welch's method with 3s segment length
