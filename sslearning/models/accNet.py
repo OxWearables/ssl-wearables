@@ -19,6 +19,19 @@ class Classifier(nn.Module):
         return y_pred
 
 
+class ProjectionHead(nn.Module):
+    def __init__(self, input_size=1024, nn_size=512, encoding_size=100):
+        super(ProjectionHead, self).__init__()
+        self.linear1 = torch.nn.Linear(input_size, nn_size)
+        self.linear2 = torch.nn.Linear(nn_size, encoding_size)
+
+    def forward(self, x):
+        x = self.linear1(x)
+        x = F.relu(x)
+        x = self.linear2(x)
+        return x
+
+
 class EvaClassifier(nn.Module):
     def __init__(self, input_size=1024, nn_size=512, output_size=2):
         super(EvaClassifier, self).__init__()
@@ -655,6 +668,7 @@ class Resnet(nn.Module):
         resnet_version=1,
         epoch_len=10,
         is_mtl=False,
+        is_simclr=False,
     ):
         super(Resnet, self).__init__()
 
@@ -748,9 +762,9 @@ class Resnet(nn.Module):
             self.time_w_h = Classifier(
                 input_size=out_channels, output_size=output_size
             )
-        else:
-            self.classifier = Classifier(
-                input_size=out_channels, output_size=output_size
+        elif is_simclr:
+            self.classifier = ProjectionHead(
+                input_size=out_channels, encoding_size=output_size
             )
 
         weight_init(self)
