@@ -6,3 +6,4 @@ scale: false
 time_warped: false
 positive_ratio: 0.5
 task_name: 'permutation'
+multi: false

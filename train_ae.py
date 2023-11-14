@@ -7,7 +7,7 @@ from torchvision import transforms
 from torchsummary import summary
 
 # Model utils
-from sslearning.models.accNet import SSLNET, Resnet
+from sslearning.models.accNet import Autoencoder
 from sslearning.data.datautils import (
     RandomSwitchAxisTimeSeries,
     RotationAxisTimeSeries,
@@ -144,11 +144,9 @@ def set_up_data4train(
     return my_X, aot_y, scale_y, permute_y, time_w_y
 
 
-def evaluate_model(model, data_loader, my_device, cfg, rank):
+def evaluate_model(model, data_loader, my_device, cfg, rank, criterion):
     model.eval()
     losses = []
-    acces = []
-    task_losses = []
 
     for i, (my_X, aot_y, scale_y, permute_y, time_w_y) in enumerate(
         data_loader
@@ -157,33 +155,16 @@ def evaluate_model(model, data_loader, my_device, cfg, rank):
             my_X, aot_y, scale_y, permute_y, time_w_y = set_up_data4train(
                 my_X, aot_y, scale_y, permute_y, time_w_y, cfg, my_device, rank
             )
-            aot_y_pred, scale_y_pred, permute_y_pred, time_w_h_pred = model(
-                my_X
-            )
+            logits = model(my_X)
 
-            loss, acc, task_loss = compute_loss(
-                cfg,
-                aot_y,
-                scale_y,
-                permute_y,
-                time_w_y,
-                aot_y_pred,
-                scale_y_pred,
-                permute_y_pred,
-                time_w_h_pred,
-            )
+            loss = criterion(logits, my_X)
+
             losses.append(loss.item())
-            acces.append(acc.item())
-            task_losses.append(task_loss)
     losses = np.array(losses)
-    acces = np.array(acces)
-    task_losses = np.array(task_losses)
-    return losses, acces, task_losses
+    return losses
 
 
-def log_performance(
-    current_loss, current_acces, writer, mode, epoch, task_name, task_loss=[]
-):
+def log_performance(current_loss, writer, mode, epoch, task_name):
     # We want to have individual task performance
     # and an average loss performance
     # train_loss: numpy array
@@ -192,20 +173,7 @@ def log_performance(
     # rotataion_loss = np.mean(train_loss[:, ROTATION_IDX])
     # task_loss: is only true for all task config
     loss = np.mean(current_loss)
-    acc = np.mean(current_acces)
-
     writer.add_scalar(mode + "/" + task_name + "_loss", loss, epoch)
-    writer.add_scalar(mode + "/" + task_name + "_acc", acc, epoch)
-
-    if len(task_loss) > 0:
-        aot_loss = np.mean(task_loss[:, 0])
-        permute_loss = np.mean(task_loss[:, 1])
-        scale_loss = np.mean(task_loss[:, 2])
-        time_w_loss = np.mean(task_loss[:, 3])
-        writer.add_scalar(mode + "/aot_loss", aot_loss, epoch)
-        writer.add_scalar(mode + "/permute_loss", permute_loss, epoch)
-        writer.add_scalar(mode + "/scale_loss", scale_loss, epoch)
-        writer.add_scalar(mode + "/time_w_loss", time_w_loss, epoch)
 
     return loss
 
@@ -246,70 +214,6 @@ def compute_acc(logits, true_y):
     acc = torch.sum(pred_y == true_y)
     acc = 1.0 * acc / (pred_y.size()[0])
     return acc
-
-
-def compute_loss(
-    cfg,
-    aot_y,
-    scale_y,
-    permute_y,
-    time_w_y,
-    aot_y_pred,
-    scale_y_pred,
-    permute_y_pred,
-    time_w_h_pred,
-):
-    entropy_loss_fn = nn.CrossEntropyLoss()
-
-    total_loss = 0
-    total_task = 0
-    total_acc = 0
-    aot_loss = 0
-    permute_loss = 0
-    scale_loss = 0
-    time_w_loss = 0
-
-    if cfg.runtime.distributed:
-        aot_loss = entropy_loss_fn(aot_y_pred, aot_y)
-        permute_loss = entropy_loss_fn(permute_y_pred, permute_y)
-        scale_loss = entropy_loss_fn(scale_y_pred, scale_y)
-        time_w_loss = entropy_loss_fn(time_w_h_pred, time_w_y)
-
-        dummy_loss = 0.0 * (
-            aot_loss + permute_loss + scale_loss + time_w_loss
-        )  # all the output needs to be in loss
-        total_loss += dummy_loss
-
-        aot_loss = aot_loss.item()
-        permute_loss = permute_loss.item()
-        scale_loss = scale_loss.item()
-        time_w_loss = time_w_loss.item()
-
-    if cfg.task.time_reversal:
-        total_loss += entropy_loss_fn(aot_y_pred, aot_y)
-        total_acc += compute_acc(aot_y_pred, aot_y)
-        total_task += 1
-
-    if cfg.task.permutation:
-        total_loss += entropy_loss_fn(permute_y_pred, permute_y)
-        total_acc += compute_acc(permute_y_pred, permute_y)
-        total_task += 1
-
-    if cfg.task.scale:
-        total_loss += entropy_loss_fn(scale_y_pred, scale_y)
-        total_acc += compute_acc(scale_y_pred, scale_y)
-        total_task += 1
-
-    if cfg.task.time_warped:
-        total_loss += entropy_loss_fn(time_w_h_pred, time_w_y)
-        total_acc += compute_acc(time_w_h_pred, time_w_y)
-        total_task += 1
-
-    return (
-        total_loss / total_task,
-        total_acc / total_task,
-        [aot_loss, permute_loss, scale_loss, time_w_loss],
-    )
 
 
 @hydra.main(config_path="conf", config_name="config")
@@ -384,7 +288,8 @@ def main_worker(rank, cfg):
         + str(cfg.data.ratio2keep)
         + "_"
         + dt_string
-        + "_",
+        + "_"
+        + str(cfg.task.task_name),
     )
     model_path = general_model_path + ".mdl"
     num_workers = 8
@@ -414,15 +319,7 @@ def main_worker(rank, cfg):
     else:
         my_device = "cpu"
 
-    if cfg.model.resnet_version > 0:
-        model = Resnet(
-            output_size=2,
-            resnet_version=cfg.model.resnet_version,
-            epoch_len=cfg.dataloader.epoch_len,
-            is_mtl=cfg.task.multi,
-        )
-    else:
-        model = SSLNET(output_size=2, flatten_size=1024)  # VGG
+    model = Autoencoder()
     model = model.float()
     print(model)
 
@@ -516,6 +413,7 @@ def main_worker(rank, cfg):
     ####################
     #   Set up Training
     ###################
+    criterion = nn.MSELoss()
     optimizer, scheduler = set_linear_scale_lr(model, cfg)
     total_step = len(train_loader)
 
@@ -531,8 +429,6 @@ def main_worker(rank, cfg):
 
         model.train()
         train_losses = []
-        train_acces = []
-        task_losses = []
 
         for i, (my_X, aot_y, scale_y, permute_y, time_w_y) in enumerate(
             train_loader
@@ -541,48 +437,35 @@ def main_worker(rank, cfg):
             my_X, aot_y, scale_y, permute_y, time_w_y = set_up_data4train(
                 my_X, aot_y, scale_y, permute_y, time_w_y, cfg, my_device, rank
             )
-            aot_y_pred, scale_y_pred, permute_y_pred, time_w_h_pred = model(
-                my_X
-            )
 
-            loss, acc, task_loss = compute_loss(
-                cfg,
-                aot_y,
-                scale_y,
-                permute_y,
-                time_w_y,
-                aot_y_pred,
-                scale_y_pred,
-                permute_y_pred,
-                time_w_h_pred,
-            )
+            logit = model(my_X)
+
+            loss = criterion(my_X, logit)
+
             loss.backward()
             optimizer.step()
 
             optimizer.zero_grad()
 
             if i % log_interval == 0:
-                msg = "Train: Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, ACC : {:.4f}".format(
-                    epoch + 1,
-                    num_epochs,
-                    i,
-                    total_step,
-                    loss.item(),
-                    acc.item(),
+                msg = (
+                    "Train: Epoch [{}/{}], Step [{}/{}], Loss: {:.4f} ".format(
+                        epoch + 1,
+                        num_epochs,
+                        i,
+                        total_step,
+                        loss.item(),
+                    )
                 )
                 print(msg)
             train_losses.append(loss.cpu().detach().numpy())
-            train_acces.append(acc.cpu().detach().numpy())
-            task_losses.append(task_loss)
 
-        train_task_losses = np.array(task_losses)
         if epoch >= cfg.model.warm_up_step:
             scheduler.step()
 
         train_losses = np.array(train_losses)
-        train_acces = np.array(train_acces)
-        test_losses, test_acces, task_losses = evaluate_model(
-            model, test_loader, my_device, cfg, rank
+        test_losses = evaluate_model(
+            model, test_loader, my_device, cfg, rank, criterion
         )
 
         # logging
@@ -591,21 +474,17 @@ def main_worker(rank, cfg):
         ):
             log_performance(
                 train_losses,
-                train_acces,
                 writer,
                 "train",
                 epoch,
                 cfg.task.task_name,
-                task_loss=train_task_losses,
             )
             test_loss = log_performance(
                 test_losses,
-                test_acces,
                 writer,
                 "test",
                 epoch,
                 cfg.task.task_name,
-                task_loss=task_losses,
             )
 
             # save regularly

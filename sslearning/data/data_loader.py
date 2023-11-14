@@ -55,8 +55,46 @@ def subject_collate(batch):
     return [data, aot_y, scale_y, permutation_y, time_w_y]
 
 
+def simclr_subject_collate(batch):
+    x1 = [item[0] for item in batch]
+    x1 = torch.cat(x1)
+    x2 = [item[1] for item in batch]
+    x2 = torch.cat(x2)
+    return [x1, x2]
+
+
 def worker_init_fn(worker_id):
     np.random.seed(int(time.time()))
+
+
+def augment_view(X, cfg):
+    new_X = []
+    X = X.numpy()
+
+    for i in range(len(X)):
+        current_x = X[i, :, :]
+
+        # choice = np.random.choice(
+        #     2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        # )[0]
+        # current_x = my_transforms.flip(current_x, choice)
+        # choice = np.random.choice(
+        #     2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        # )[0]
+        # current_x = my_transforms.permute(current_x, choice)
+        # choice = np.random.choice(
+        #     2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        # )[0]
+        # current_x = my_transforms.time_warp(current_x, choice)
+        choice = np.random.choice(
+            2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        )[0]
+        current_x = my_transforms.rotation(current_x, choice)
+        new_X.append(current_x)
+
+    new_X = np.array(new_X)
+    new_X = torch.Tensor(new_X)
+    return new_X
 
 
 def generate_labels(X, shuffle, cfg):
@@ -312,6 +350,80 @@ class SSL_dataset:
             labels[:, constants.PERMUTATION_POS],
             labels[:, constants.TIME_WARPED_POS],
         )
+
+
+class SIMCLR_dataset:
+    def __init__(
+        self,
+        data_root,
+        file_list_path,
+        cfg,
+        transform=None,
+        shuffle=False,
+        is_epoch_data=False,
+    ):
+        """
+        Args:
+            data_root (string): directory containing all data files
+            file_list_path (string): file list
+            cfg (dict): config
+            shuffle (bool): whether permute epoches within one subject
+            is_epoch_data (bool): whether each sample is one
+            second of data or 10 seconds of data
+
+
+        Returns:
+            data : transformed sample
+            labels (dict) : labels for avalaible transformations
+        """
+        check_file_list(file_list_path, data_root, cfg)
+        file_list_df = pd.read_csv(file_list_path)
+        self.file_list = file_list_df["file_list"].to_list()
+        self.data_root = data_root
+        self.cfg = cfg
+        self.is_epoch_data = is_epoch_data
+        self.ratio2keep = cfg.data.ratio2keep
+        self.shuffle = shuffle
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        print(idx)
+
+        # idx starts from zero
+        file_to_load = self.file_list[idx]
+        X = np.load(file_to_load, allow_pickle=True)
+
+        # to help select a percentage of data per subject
+        subject_data_count = int(len(X) * self.ratio2keep)
+        assert subject_data_count >= self.cfg.dataloader.num_sample_per_subject
+        if self.ratio2keep != 1:
+            X = X[:subject_data_count, :]
+
+        if self.is_epoch_data:
+            X = weighted_epoch_sample(
+                X, num_sample=self.cfg.dataloader.num_sample_per_subject
+            )
+        else:
+            X = weighted_sample(
+                X,
+                num_sample=self.cfg.dataloader.num_sample_per_subject,
+                epoch_len=self.cfg.dataloader.epoch_len,
+                sample_rate=self.cfg.dataloader.sample_rate,
+                is_weighted_sample=self.cfg.data.weighted_sample,
+            )
+
+        X = torch.from_numpy(X)
+        if self.transform:
+            X = self.transform(X)
+
+        X1 = augment_view(X, self.cfg)
+        X2 = augment_view(X, self.cfg)
+        return (X1, X2)
 
 
 # Return:

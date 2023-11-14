@@ -15,7 +15,7 @@ from torchvision import transforms
 import pathlib
 
 # SSL net
-from sslearning.models.accNet import cnn1, SSLNET, Resnet
+from sslearning.models.accNet import cnn1, SSLNET, Resnet, EncoderMLP
 from sslearning.scores import classification_scores, classification_report
 import copy
 from sklearn import preprocessing
@@ -282,7 +282,9 @@ def mlp_predict(model, data_loader, my_device, cfg):
 
 
 def init_model(cfg, my_device):
-    if cfg.model.resnet_version > 0:
+    if cfg.model.is_ae:
+        model = EncoderMLP(cfg.data.output_size)
+    elif cfg.model.resnet_version > 0:
         model = Resnet(
             output_size=cfg.data.output_size,
             is_eva=True,
@@ -297,6 +299,7 @@ def init_model(cfg, my_device):
     if cfg.multi_gpu:
         model = nn.DataParallel(model, device_ids=cfg.gpu_ids)
 
+    print(model)
     model.to(my_device, dtype=torch.float)
     return model
 
@@ -305,11 +308,8 @@ def setup_model(cfg, my_device):
     model = init_model(cfg, my_device)
 
     if cfg.evaluation.load_weights:
-        load_weights(
-            cfg.evaluation.flip_net_path,
-            model,
-            my_device
-        )
+        print("Loading weights from %s" % cfg.evaluation.flip_net_path)
+        load_weights(cfg.evaluation.flip_net_path, model, my_device)
     if cfg.evaluation.freeze_weight:
         freeze_weights(model)
     return model
@@ -503,11 +503,11 @@ def handcraft_features(xyz, sample_rate):
     feats["std"] = np.std(m)
     feats["range"] = np.ptp(m)
     feats["mad"] = stats.median_abs_deviation(m)
-    if feats['std'] > .01:
-        feats['skew'] = np.nan_to_num(stats.skew(m))
-        feats['kurt'] = np.nan_to_num(stats.kurtosis(m))
+    if feats["std"] > 0.01:
+        feats["skew"] = np.nan_to_num(stats.skew(m))
+        feats["kurt"] = np.nan_to_num(stats.kurtosis(m))
     else:
-        feats['skew'] = feats['kurt'] = 0
+        feats["skew"] = feats["kurt"] = 0
     feats["enmomean"] = np.mean(np.abs(m - 1))
 
     # Spectrum using Welch's method with 3s segment length
@@ -620,9 +620,7 @@ def get_data_with_subject_count(subject_count, X, y, pid):
     return filter_X, filter_y, filter_pid
 
 
-def load_weights(
-    weight_path, model, my_device
-):
+def load_weights(weight_path, model, my_device):
     # only need to change weights name when
     # the model is trained in a distributed manner
 
@@ -632,12 +630,17 @@ def load_weights(
     )  # v2 has the right para names
 
     # distributed pretraining can be inferred from the keys' module. prefix
-    head = next(iter(pretrained_dict_v2)).split('.')[0]  # get head of first key
-    if head == 'module':
+    head = next(iter(pretrained_dict_v2)).split(".")[
+        0
+    ]  # get head of first key
+    if head == "module":
         # remove module. prefix from dict keys
-        pretrained_dict_v2 = {k.partition('module.')[2]: pretrained_dict_v2[k] for k in pretrained_dict_v2.keys()}
+        pretrained_dict_v2 = {
+            k.partition("module.")[2]: pretrained_dict_v2[k]
+            for k in pretrained_dict_v2.keys()
+        }
 
-    if hasattr(model, 'module'):
+    if hasattr(model, "module"):
         model_dict = model.module.state_dict()
         multi_gpu_ft = True
     else:

@@ -1,7 +1,6 @@
 import numpy as np
 from transforms3d.axangles import axangle2mat  # for rotation
 from scipy.interpolate import CubicSpline  # for warping
-import math
 
 """
 This file implements a list of transforms for tri-axial raw-accelerometry
@@ -29,17 +28,18 @@ def rotation(sample, choice):
         choice (float): [0, 9] for each axis,
         we can do 4 rotations 0, 90 180, 270
     """
-    if choice == 9:
-        return sample
+    if choice == 1:
+        # angle_choices = [1 / 4 * np.pi, 1 / 2 * np.pi, 3 / 4 * np.pi]
+        # angle = angle_choices[choice % 3]
+        # axis = axis_choices[math.floor(choice / 3)]
 
-    axis_choices = [[0, 0, 1], [0, 1, 0], [1, 0, 0]]
-    angle_choices = [1 / 4 * np.pi, 1 / 2 * np.pi, 3 / 4 * np.pi]
-    axis = axis_choices[math.floor(choice / 3)]
-    angle = angle_choices[choice % 3]
+        axes = [[0, 0, 1], [0, 1, 0], [1, 0, 0]]
+        sample = np.swapaxes(sample, 0, 1)
+        for i in range(3):
+            angle = np.random.uniform(low=-np.pi, high=np.pi)
+            sample = np.matmul(sample, axangle2mat(axes[i], angle))
 
-    sample = np.swapaxes(sample, 0, 1)
-    sample = np.matmul(sample, axangle2mat(axis, angle))
-    sample = np.swapaxes(sample, 0, 1)
+        sample = np.swapaxes(sample, 0, 1)
     return sample
 
 
