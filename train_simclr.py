@@ -8,9 +8,9 @@ from torchsummary import summary
 
 # Model utils
 from sslearning.models.accNet import SSLNET, Resnet
+from sslearning.models.lars import LARS
 from sslearning.data.datautils import (
     RandomSwitchAxisTimeSeries,
-    RotationAxisTimeSeries,
 )
 
 # Data utils
@@ -25,7 +25,6 @@ import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch import nn
-import torch.optim as optim
 
 # Torch DDP
 import torch.multiprocessing as mp
@@ -33,13 +32,11 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.distributed as dist
 
 # Plotting
-from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 
 import signal
 import time
 import sys
-from sslearning.pytorchtools import EarlyStopping
 
 import warnings
 
@@ -170,35 +167,101 @@ def log_performance(current_loss, writer, mode, epoch, task_name):
     return loss
 
 
-def set_linear_scale_lr(model, cfg):
-    """Allow for large minibatch
-    https://arxiv.org/abs/1706.02677
-    1. Linear scale learning rate in proportion to minibatch size
-    2. Linear learning scheduler to allow for warm up for the first 5 epoches
-    """
-    if cfg.model.lr_scale:
-        # reference batch size and learning rate
-        # lr: 0.0001 batch_size: 512
-        reference_lr = 0.0001
-        ref_batch_size = 512.0
-        optimizer = optim.Adam(
-            model.parameters(), lr=reference_lr, amsgrad=True
+def load_optimizer(opt, batch_size, weight_decay, training_epoch, model):
+
+    scheduler = None
+    if opt == "Adam":
+        optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)  # TODO: LARS
+    elif opt == "LARS":
+        # optimized using LARS with linear learning rate scaling
+        # (i.e. LearningRate = 0.3 × BatchSize/256) and weight decay of 10−6.
+        learning_rate = 0.1 * batch_size / 256
+        optimizer = LARS(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+            exclude_from_weight_decay=["batch_normalization", "bias"],
         )
-        k = (
-            1.0
-            * cfg.dataloader.num_sample_per_subject
-            * cfg.data.batch_subject_num
-        ) / ref_batch_size
-        scale_ratio = k ** (1.0 / 5.0)
-        # linear warm up to account for large batch size
-        lambda1 = lambda epoch: scale_ratio**epoch
+
+        # "decay the learning rate with the cosine decay schedule without restarts"
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, training_epoch, eta_min=0, last_epoch=-1
+        )
     else:
-        optimizer = optim.Adam(
-            model.parameters(), lr=cfg.model.learning_rate, amsgrad=True
-        )
-        lambda1 = lambda epoch: 1.0**epoch
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
+        raise NotImplementedError
+
     return optimizer, scheduler
+
+
+class GatherLayer(torch.autograd.Function):
+    """Gather tensors from all process, supporting backward propagation."""
+
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
+        output = [
+            torch.zeros_like(input) for _ in range(dist.get_world_size())
+        ]
+        dist.all_gather(output, input)
+        return tuple(output)
+
+    @staticmethod
+    def backward(ctx, *grads):
+        (input,) = ctx.saved_tensors
+        grad_out = torch.zeros_like(input)
+        grad_out[:] = grads[dist.get_rank()]
+        return grad_out
+
+
+class NT_Xent(nn.Module):
+    def __init__(self, batch_size, temperature, world_size):
+        super(NT_Xent, self).__init__()
+        self.batch_size = batch_size
+        self.temperature = temperature
+        self.world_size = world_size
+
+        self.mask = self.mask_correlated_samples(batch_size, world_size)
+        self.criterion = nn.CrossEntropyLoss(reduction="sum")
+        self.similarity_f = nn.CosineSimilarity(dim=2)
+
+    def mask_correlated_samples(self, batch_size, world_size):
+        N = 2 * batch_size * world_size
+        mask = torch.ones((N, N), dtype=bool)
+        mask = mask.fill_diagonal_(0)
+        for i in range(batch_size * world_size):
+            mask[i, batch_size * world_size + i] = 0
+            mask[batch_size * world_size + i, i] = 0
+        return mask
+
+    def forward(self, z_i, z_j):
+        """
+        We do not sample negative examples explicitly.
+        Instead, given a positive pair, similar to (Chen et al., 2017),
+        we treat the other 2(N − 1) augmented examples within a minibatch as negative examples.
+        """
+        N = 2 * self.batch_size * self.world_size
+
+        z = torch.cat((z_i, z_j), dim=0)
+        if self.world_size > 1:
+            z = torch.cat(GatherLayer.apply(z), dim=0)
+
+        sim = (
+            self.similarity_f(z.unsqueeze(1), z.unsqueeze(0))
+            / self.temperature
+        )
+
+        sim_i_j = torch.diag(sim, self.batch_size * self.world_size)
+        sim_j_i = torch.diag(sim, -self.batch_size * self.world_size)
+
+        # We have 2N samples, but with Distributed training every GPU gets N examples too, resulting in: 2xNxN
+        positive_samples = torch.cat((sim_i_j, sim_j_i), dim=0).reshape(N, 1)
+        negative_samples = sim[self.mask].reshape(N, -1)
+
+        labels = torch.zeros(N).to(positive_samples.device).long()
+        logits = torch.cat((positive_samples, negative_samples), dim=1)
+        loss = self.criterion(logits, labels)
+        loss /= N
+        return loss
 
 
 # contrastive loss
@@ -255,77 +318,6 @@ class SimCLR_Loss(nn.Module):
         return loss
 
 
-def compute_acc(logits, true_y):
-    pred_y = torch.argmax(logits, dim=1)
-    acc = torch.sum(pred_y == true_y)
-    acc = 1.0 * acc / (pred_y.size()[0])
-    return acc
-
-
-def compute_loss(
-    cfg,
-    aot_y,
-    scale_y,
-    permute_y,
-    time_w_y,
-    aot_y_pred,
-    scale_y_pred,
-    permute_y_pred,
-    time_w_h_pred,
-):
-    entropy_loss_fn = nn.CrossEntropyLoss()
-
-    total_loss = 0
-    total_task = 0
-    total_acc = 0
-    aot_loss = 0
-    permute_loss = 0
-    scale_loss = 0
-    time_w_loss = 0
-
-    if cfg.runtime.distributed:
-        aot_loss = entropy_loss_fn(aot_y_pred, aot_y)
-        permute_loss = entropy_loss_fn(permute_y_pred, permute_y)
-        scale_loss = entropy_loss_fn(scale_y_pred, scale_y)
-        time_w_loss = entropy_loss_fn(time_w_h_pred, time_w_y)
-
-        dummy_loss = 0.0 * (
-            aot_loss + permute_loss + scale_loss + time_w_loss
-        )  # all the output needs to be in loss
-        total_loss += dummy_loss
-
-        aot_loss = aot_loss.item()
-        permute_loss = permute_loss.item()
-        scale_loss = scale_loss.item()
-        time_w_loss = time_w_loss.item()
-
-    if cfg.task.time_reversal:
-        total_loss += entropy_loss_fn(aot_y_pred, aot_y)
-        total_acc += compute_acc(aot_y_pred, aot_y)
-        total_task += 1
-
-    if cfg.task.permutation:
-        total_loss += entropy_loss_fn(permute_y_pred, permute_y)
-        total_acc += compute_acc(permute_y_pred, permute_y)
-        total_task += 1
-
-    if cfg.task.scale:
-        total_loss += entropy_loss_fn(scale_y_pred, scale_y)
-        total_acc += compute_acc(scale_y_pred, scale_y)
-        total_task += 1
-
-    if cfg.task.time_warped:
-        total_loss += entropy_loss_fn(time_w_h_pred, time_w_y)
-        total_acc += compute_acc(time_w_h_pred, time_w_y)
-        total_task += 1
-
-    return (
-        total_loss / total_task,
-        total_acc / total_task,
-        [aot_loss, permute_loss, scale_loss, time_w_loss],
-    )
-
-
 @hydra.main(config_path="conf", config_name="config")
 def main(cfg):
     n_gpus = torch.cuda.device_count()
@@ -376,7 +368,7 @@ def main_worker(rank, cfg):
             main_log_dir,
             cfg.model.name + "_" + cfg.task.task_name + "_" + dt_string,
         )
-        writer = SummaryWriter(log_dir)
+        # writer = SummaryWriter(log_dir)
 
     check_file_list(train_file_list_path, train_data_root, cfg)
     check_file_list(test_file_list_path, test_data_root, cfg)
@@ -426,14 +418,16 @@ def main_worker(rank, cfg):
         my_device = "cpu"
 
     if cfg.task.task_name == "simclr":
-        z_size = 100
+        z_size = 64
         model = Resnet(
             output_size=z_size,
             resnet_version=cfg.model.resnet_version,
             epoch_len=cfg.dataloader.epoch_len,
             is_simclr=True,
         )
-        criterion = SimCLR_Loss(batch_size=true_batch_size, temperature=0.5)
+        criterion = NT_Xent(
+            batch_size=true_batch_size, temperature=0.1, world_size=1
+        )
     else:
         model = SSLNET(output_size=2, flatten_size=1024)  # VGG
     model = model.float()
@@ -479,8 +473,14 @@ def main_worker(rank, cfg):
     ####################
     #   Set up data
     ###################
+    # my_transform = transforms.Compose(
+    #     [RandomSwitchAxisTimeSeries(), RotationAxisTimeSeries()]
+    # )
     my_transform = transforms.Compose(
-        [RandomSwitchAxisTimeSeries(), RotationAxisTimeSeries()]
+        [
+            RandomSwitchAxisTimeSeries(),
+            transforms.standard_normalization,
+        ]
     )
 
     train_dataset = SIMCLR_dataset(
@@ -510,30 +510,22 @@ def main_worker(rank, cfg):
         num_workers=num_workers,
     )
 
-    test_dataset = SIMCLR_dataset(
-        test_data_root, test_file_list_path, cfg, is_epoch_data=is_epoch_data
-    )
-    test_loader = DataLoader(
-        test_dataset,
-        batch_size=cfg.data.batch_subject_num,
-        collate_fn=simclr_subject_collate,
-        shuffle=False,
-        pin_memory=True,
-        worker_init_fn=worker_init_fn,
-        num_workers=num_workers,
-    )
-
     ####################
     #   Set up Training
     ###################
-    optimizer, scheduler = set_linear_scale_lr(model, cfg)
+    weight_decay = 10e-6
+    epoch_without_restart = 200
+    optimizer, scheduler = load_optimizer(
+        "LARS", true_batch_size, weight_decay, epoch_without_restart, model
+    )
     total_step = len(train_loader)
 
     print("Start training")
     # scaler = torch.cuda.amp.GradScaler()
-    early_stopping = EarlyStopping(
-        patience=cfg.model.patience, path=model_path, verbose=True
-    )
+    # early_stopping = EarlyStopping(
+    #     patience=cfg.model.patience, path=model_path, verbose=True
+    # )
+    print("saving model weight to %s" % model_path)
 
     for epoch in range(num_epochs):
         if cfg.runtime.distributed:
@@ -573,47 +565,12 @@ def main_worker(rank, cfg):
                 print(msg)
             train_losses.append(loss.cpu().detach().numpy())
 
-        if epoch < cfg.model.warm_up_step:
+        if epoch >= cfg.model.warm_up_step:
             scheduler.step()
 
-        train_losses = np.array(train_losses)
-
-        test_losses = evaluate_model(
-            model, test_loader, cfg, my_device, rank, criterion
-        )
-
-        # logging
-        if cfg.runtime.distributed is False or (
-            cfg.runtime.distributed and rank == gpu_id2save
-        ):
-            log_performance(
-                train_losses,
-                writer,
-                "train",
-                epoch,
-                cfg.task.task_name,
-            )
-            test_loss = log_performance(
-                test_losses,
-                writer,
-                "test",
-                epoch,
-                cfg.task.task_name,
-            )
-
-            # save regularly
-            if cfg.runtime.distributed is False or (
-                cfg.runtime.distributed and rank == gpu_id2save
-            ):
-                if epoch % 5 == 0 and cfg.data.data_name == "100k":
-                    epoch_model_path = general_model_path + str(epoch) + ".mdl"
-                    torch.save(model.state_dict(), epoch_model_path)
-
-            early_stopping(test_loss, model)
-
-            if early_stopping.early_stop:
-                print("Early stopping")
-                break
+        loss = np.mean(np.array(train_losses))
+        print("Epoch: %d, training Loss: %f" % (epoch, loss))
+        torch.save(model.state_dict(), model_path)
 
     if cfg.runtime.distributed:
         cleanup()

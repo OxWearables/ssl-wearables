@@ -20,7 +20,7 @@ class Classifier(nn.Module):
 
 
 class ProjectionHead(nn.Module):
-    def __init__(self, input_size=1024, nn_size=512, encoding_size=100):
+    def __init__(self, input_size=1024, nn_size=256, encoding_size=100):
         super(ProjectionHead, self).__init__()
         self.linear1 = torch.nn.Linear(input_size, nn_size)
         self.linear2 = torch.nn.Linear(nn_size, encoding_size)
@@ -859,3 +859,82 @@ def weight_init(self, mode="fan_out", nonlinearity="relu"):
         elif isinstance(m, (nn.BatchNorm1d)):
             nn.init.constant_(m.weight, 1)
             nn.init.constant_(m.bias, 0)
+
+
+class Autoencoder(nn.Module):
+    def __init__(self):
+        super(Autoencoder, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv1d(3, 64, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 64, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 128, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 128, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 256, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(256, 256, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(256, 512, 3, stride=3, padding=1),
+            nn.ReLU(True),
+        )
+
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose1d(512, 256, 3, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(256, 256, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(256, 128, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(128, 128, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(128, 64, 7, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(64, 64, 7, stride=3, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(
+                64, 3, 5, stride=3, padding=3, output_padding=1
+            ),
+            nn.ReLU(True),
+        )
+
+        weight_init(self)
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.decoder(x)
+        return x
+
+
+class EncoderMLP(nn.Module):
+    def __init__(self, output_size):
+        super(EncoderMLP, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv1d(3, 64, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 64, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 128, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 128, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 256, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(256, 256, 5, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(256, 512, 3, stride=3, padding=1),
+            nn.ReLU(True),
+        )
+
+        self.classifier = EvaClassifier(
+            input_size=512, output_size=output_size
+        )
+
+        weight_init(self)
+
+    def forward(self, x):
+        feats = self.encoder(x)
+        y = self.classifier(feats.view(x.shape[0], -1))
+        return y

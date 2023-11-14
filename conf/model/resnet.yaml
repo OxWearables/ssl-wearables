@@ -6,4 +6,4 @@ resnet_version: 1
 warm_up_step: 5
 lr_scale: true
 patience: 5
-
+is_ae: false

@@ -67,18 +67,29 @@ def worker_init_fn(worker_id):
     np.random.seed(int(time.time()))
 
 
-def augment_view(X):
+def augment_view(X, cfg):
     new_X = []
-    choice = 1
     X = X.numpy()
 
     for i in range(len(X)):
         current_x = X[i, :, :]
 
-        current_x = my_transforms.flip(current_x, choice)
-        current_x = my_transforms.permute(current_x, choice)
-        current_x = my_transforms.time_warp(current_x, choice)
-
+        # choice = np.random.choice(
+        #     2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        # )[0]
+        # current_x = my_transforms.flip(current_x, choice)
+        # choice = np.random.choice(
+        #     2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        # )[0]
+        # current_x = my_transforms.permute(current_x, choice)
+        # choice = np.random.choice(
+        #     2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        # )[0]
+        # current_x = my_transforms.time_warp(current_x, choice)
+        choice = np.random.choice(
+            2, 1, p=[cfg.task.positive_ratio, 1 - cfg.task.positive_ratio]
+        )[0]
+        current_x = my_transforms.rotation(current_x, choice)
         new_X.append(current_x)
 
     new_X = np.array(new_X)
@@ -381,6 +392,7 @@ class SIMCLR_dataset:
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
+        print(idx)
 
         # idx starts from zero
         file_to_load = self.file_list[idx]
@@ -409,8 +421,8 @@ class SIMCLR_dataset:
         if self.transform:
             X = self.transform(X)
 
-        X1 = augment_view(X)
-        X2 = augment_view(X)
+        X1 = augment_view(X, self.cfg)
+        X2 = augment_view(X, self.cfg)
         return (X1, X2)
 
 
