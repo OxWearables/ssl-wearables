@@ -142,13 +142,15 @@ repo easier to use. Pull requests are very welcome. Please open an issue if you 
 If you use our work, please cite:
 
 ```tex
-@misc{yuan2022selfsupervised,
-      title={Self-supervised Learning for Human Activity Recognition Using 700,000 Person-days of Wearable Data}, 
-      author={Hang Yuan and Shing Chan and Andrew P. Creagh and Catherine Tong and David A. Clifton and Aiden Doherty},
-      year={2022},
-      eprint={2206.02909},
-      archivePrefix={arXiv},
-      primaryClass={eess.SP}
+@article{yuan2024self,
+  title={Self-supervised learning for human activity recognition using 700,000 person-days of wearable data},
+  author={Yuan, Hang* and Chan, Shing* and Creagh, Andrew P and Tong, Catherine and Acquah, Aidan and Clifton, David A and Doherty, Aiden},
+  journal={NPJ digital medicine},
+  volume={7},
+  number={1},
+  pages={91},
+  year={2024},
+  publisher={Nature Publishing Group UK London}
 }
 ```
 
