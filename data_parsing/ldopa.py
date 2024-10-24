@@ -213,7 +213,7 @@ def build_participant_acc_data(subject, datadir, outdir):
         ]
         subjectFile = pd.concat(dataFiles).dropna().drop_duplicates()
         subjectFile = subjectFile / constants.g
-        subjectFile.index.name = "timestamp"
+        subjectFile.index.name = "time"
         subjectFile.rename(
             columns={
                 "GENEActiv_X": "x",
@@ -400,7 +400,7 @@ def download_ldopa(
 
 
 def load_data(
-    datafile, sample_rate=100, index_col="timestamp", annot_type="int"
+    datafile, sample_rate=100, index_col="time", annot_type="int"
 ):
     if ".parquet" in datafile:
         data = pd.read_parquet(datafile)
