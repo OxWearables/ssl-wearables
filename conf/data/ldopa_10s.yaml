@@ -1,0 +1,13 @@
+data_root: /data/ldopa/prepared
+X_path: "${data.data_root}/X.npy"
+Y_path:  "${data.data_root}/Y.npy"
+PID_path:  "${data.data_root}/pid.npy"
+sample_rate: 30
+task_type: 'classify'
+output_size: 12
+batch_size: 1000
+held_one_subject_out: false
+weighted_loss_fn: true
+dataset_name: 'ldopa'
+subject_count: -1
+ratio2keep: 1
